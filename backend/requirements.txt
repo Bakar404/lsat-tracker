@@ -1,1 +1,7 @@
-
+fastapi>=0.111
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+pydantic>=2.7
+pymupdf>=1.24.0
+numpy>=1.24.0
+pandas>=2.2.2
