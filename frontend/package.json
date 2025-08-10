@@ -1,1 +1,1 @@
-
+{ "name":"lsat-tracker", "scripts":{ "build":"vite build", "preview":"vite preview" } }
