@@ -1,10 +1,12 @@
+from typing import Optional
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
-from typing import Optional
 import uvicorn
 
 import lsat_transformerWIP as transformer
+
 
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
@@ -16,7 +18,7 @@ app = FastAPI(title="LSAT Transformer API", version="0.2.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,  # tighten for prod
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,6 +28,12 @@ app.add_middleware(
 class TransformResponse(BaseModel):
     all_sections_csv: str
     exam_metadata_csv: str
+
+
+@app.get("/")
+def root():
+    # optional: send devs to interactive docs
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/healthz")
@@ -49,9 +57,9 @@ async def transform_endpoint(
     try:
         rows_csv, meta_csv = transformer.transform(
             data,
-            original_name=file.filename,  # <-- pass browser filename as hint
-            exam_number=exam_number,      # <-- optional override
-            exam_date=exam_date,          # <-- optional override
+            original_name=file.filename,  # browser filename hint
+            exam_number=exam_number,      # optional override
+            exam_date=exam_date,          # optional override
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Transformer failed: {e}")
@@ -60,10 +68,7 @@ async def transform_endpoint(
         raise HTTPException(
             status_code=500, detail="Transformer returned empty CSV(s)")
 
-    return TransformResponse(
-        all_sections_csv=rows_csv,
-        exam_metadata_csv=meta_csv
-    )
+    return TransformResponse(all_sections_csv=rows_csv, exam_metadata_csv=meta_csv)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
