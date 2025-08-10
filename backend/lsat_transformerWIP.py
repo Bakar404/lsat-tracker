@@ -7,7 +7,11 @@ Outputs:
   2) exam metadata CSV:
      exam_number, exam_date, scaled_score
 
-Dependencies:
+API-friendly:
+  - Accepts an optional original filename hint to parse exam_number/exam_date.
+  - Accepts optional overrides for exam_number/exam_date from the API.
+
+Deps:
   pip install "pymupdf>=1.24.0" "numpy>=1.24.0"
 """
 
@@ -19,23 +23,31 @@ from typing import Dict, List, Tuple, Optional
 import fitz  # PyMuPDF
 import numpy as np
 
-# ---------- title parsing ----------
-MONTHS = {'jan': 1, 'january': 1, 'feb': 2, 'february': 2, 'mar': 3, 'march': 3, 'apr': 4, 'april': 4,
-          'may': 5, 'jun': 6, 'june': 6, 'jul': 7, 'july': 7, 'aug': 8, 'august': 8, 'sep': 9, 'sept': 9, 'september': 9,
-          'oct': 10, 'october': 10, 'nov': 11, 'november': 11, 'dec': 12, 'december': 12}
+# ---------- title/date parsing helpers ----------
+
+MONTHS = {
+    'jan': 1, 'january': 1, 'feb': 2, 'february': 2, 'mar': 3, 'march': 3, 'apr': 4, 'april': 4,
+    'may': 5, 'jun': 6, 'june': 6, 'jul': 7, 'july': 7, 'aug': 8, 'august': 8,
+    'sep': 9, 'sept': 9, 'september': 9, 'oct': 10, 'october': 10,
+    'nov': 11, 'november': 11, 'dec': 12, 'december': 12,
+}
 
 
 def _last_date_match(s: str):
-    pats = [
+    """Return (year, month, day, start_idx) for the LAST date found in s, else None."""
+    patterns = [
+        # MM/DD/YYYY or MM_DD_YYYY
         r'(?P<m>\d{1,2})[\/_\-](?P<d>\d{1,2})[\/_\-](?P<y>\d{4})',
+        # YYYY-MM-DD or YYYY_MM_DD
         r'(?P<y>\d{4})[\/_\-](?P<m>\d{1,2})[\/_\-](?P<d>\d{1,2})',
+        # Month D, YYYY
         r'(?P<mon>[A-Za-z]{3,9})[ ,_\-]+(?P<d>\d{1,2})(?:st|nd|rd|th)?[ ,_\-]+(?P<y>\d{4})',
     ]
     last = None
-    for pat in pats:
+    for pat in patterns:
         for m in re.finditer(pat, s, flags=re.IGNORECASE):
             gd = m.groupdict()
-            if 'mon' in gd and gd['mon']:
+            if 'mon' in gd and gd.get('mon'):
                 mon = gd['mon'].lower()
                 if mon not in MONTHS:
                     continue
@@ -51,15 +63,33 @@ def _last_date_match(s: str):
 
 
 def _nearest_int_before(s: str, idx: int) -> Optional[str]:
+    """Integer immediately before idx (ignoring spaces/punct)."""
     pre = re.sub(r'[\s\-_/,]+$', '', s[:idx])
     m = re.search(r'(\d+)\D*$', pre)
     return m.group(1) if m else None
 
 
-def parse_title_fields(pdf_path: str, doc: fitz.Document) -> Tuple[Optional[str], Optional[str]]:
+def _stem(name_or_path: Optional[str]) -> str:
+    if not name_or_path:
+        return ""
+    # If it's a filename with extension, drop extension; otherwise return as-is
+    p = pathlib.Path(name_or_path)
+    return p.stem if p.suffix else str(p)
+
+
+def parse_title_fields(pdf_path: str, doc: fitz.Document, hint_name: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
     meta_title = (doc.metadata or {}).get("title") or ""
     stem = pathlib.Path(pdf_path).stem
-    s = f"{meta_title} | {stem}".strip(" |")
+
+    def _stem(x):
+        if not x:
+            return ""
+        p = pathlib.Path(x)
+        return p.stem if p.suffix else str(p)
+
+    # Consider (1) PDF metadata title, (2) original client filename hint, (3) actual path stem
+    s = " | ".join([p for p in (meta_title, _stem(hint_name), stem) if p])
+
     hit = _last_date_match(s)
     if not hit:
         return None, None
@@ -71,7 +101,9 @@ def parse_title_fields(pdf_path: str, doc: fitz.Document) -> Tuple[Optional[str]
     return exam_number, exam_date
 
 
-# ---------- text parsing ----------
+# ---------- text parsing & geometry ----------
+
+
 SECTION_HEADER_RE = re.compile(r"Section\s+(\d+)(?:\s*\(\*\))?", re.IGNORECASE)
 ROW_RE = re.compile(r"""
     ^\s*(?P<qnum>\d{1,2})
@@ -85,7 +117,8 @@ HEADER_LINE_RE = re.compile(
 SCALED_SCORE_RE = re.compile(r"Scaled\s+Score:\s*(\d{2,3})", re.IGNORECASE)
 
 
-def coalesce_space(s: str) -> str: return re.sub(r"\s+", " ", s).strip()
+def coalesce_space(s: str) -> str:
+    return re.sub(r"\s+", " ", s).strip()
 
 
 def span_text_blocks(page: fitz.Page):
@@ -129,26 +162,14 @@ def find_header_and_columns(spans):
 
 
 def _time_to_seconds(s: str) -> int:
-    """
-    Accepts: 'Xm Ys', 'Xm', 'Ys', 'M:SS' (e.g., '8:03'), with optional spaces.
-    Returns integer seconds.
-    """
-    s = s.strip().lower()
-    s = s.replace(" ", "")
-    # mm:ss
+    s = s.strip().lower().replace(" ", "")
     m = re.match(r'^(?P<m>\d+):(?P<s>\d{1,2})$', s)
     if m:
         return int(m.group('m'))*60 + int(m.group('s'))
-    # XmYs, Xm, Ys
     m = re.match(r'^(?:(?P<m>\d+)m)?(?:(?P<s>\d+)s)?$', s)
     if m and (m.group('m') or m.group('s')):
-        minutes = int(m.group('m') or 0)
-        seconds = int(m.group('s') or 0)
-        return minutes*60 + seconds
-    # fallback: digits only
-    if s.isdigit():
-        return int(s)
-    return 0
+        return int(m.group('m') or 0)*60 + int(m.group('s') or 0)
+    return int(s) if s.isdigit() else 0
 
 
 def parse_rows(page: fitz.Page):
@@ -163,18 +184,16 @@ def parse_rows(page: fitz.Page):
             continue
         qnum = int(m.group("qnum"))
         subtype = m.group("subtype").strip()
-        level = int(m.group("level").strip())  # integer Difficulty
-        time_str = m.group("time").strip()
-        total_sec = _time_to_seconds(time_str)
+        level = int(m.group("level").strip())               # Difficulty as int
+        total_sec = _time_to_seconds(m.group("time").strip())
 
-        # y-center for row & question number x1
+        # y-center & qnum right edge
         y_vals = [(sp["bbox"][1] + sp["bbox"][3]) * 0.5 for sp in ordered]
         row_y = sum(y_vals)/len(y_vals)
         qnum_x1 = None
-        qnum_str = str(qnum)
         for sp in ordered:
             t = sp["text"].strip()
-            if t == qnum_str or re.fullmatch(rf"{qnum_str}\D*", t):
+            if t == str(qnum) or re.fullmatch(rf"{qnum}\D*", t):
                 qnum_x1 = sp["bbox"][2]
                 break
         if qnum_x1 is None and ordered:
@@ -183,15 +202,15 @@ def parse_rows(page: fitz.Page):
         rows.append({
             "Question": qnum,
             "Subtype": subtype,
-            "Difficulty": level,                 # integer
-            "total_time_seconds": total_sec,     # integer seconds
+            "Difficulty": level,
+            "total_time_seconds": total_sec,
             "row_y_pt": row_y,
             "qnum_x1": qnum_x1,
             **col_x
         })
     return rows
 
-# ---------- raster ✓/✕ and flag ----------
+# ---------- raster ✓/✕ + flag ----------
 
 
 def render_page_np(page: fitz.Page, dpi=300):
@@ -207,9 +226,9 @@ def classify_strip_rgb(rgb):
         return 0
     r, g, b = rgb
     if (g >= r + 5) and (b >= r) and (g >= b - 10):
-        return 1  # teal-ish (✓)
+        return 1  # teal-ish ✓
     if (r >= g + 5) and (r >= b + 10):
-        return 0              # orange-ish (✕)
+        return 0               # orange-ish ✕
     return 1 if (g + b) >= (r + 5) else 0
 
 
@@ -250,10 +269,11 @@ def add_scores_via_raster(page: fitz.Page, rows: List[Dict]):
 
 
 def add_flags_via_raster(page: fitz.Page, rows: List[Dict]):
-    """Detect the blue-gray flag just to the RIGHT of the question number and LEFT of the Response column."""
+    """Detect the blue-gray flag immediately to the right of question number and left of Response."""
     page_np, zoom = render_page_np(page, dpi=300)
     H, W, _ = page_np.shape
-    default_resp = int(0.30 * (W/zoom))  # rough fallback
+    # fallback if we didn't find the column
+    default_resp = int(0.30 * (W/zoom))
 
     for r in rows:
         qx1 = r.get("qnum_x1", None)
@@ -261,7 +281,6 @@ def add_flags_via_raster(page: fitz.Page, rows: List[Dict]):
         if qx1 is None:
             r["Flagged"] = "FALSE"
             continue
-
         left_pt = qx1 + 2
         right_pt = rx - 2
         if right_pt <= left_pt:
@@ -289,17 +308,29 @@ def add_flags_via_raster(page: fitz.Page, rows: List[Dict]):
                 break
         r["Flagged"] = "TRUE" if found else "FALSE"
 
-# ---------- main ----------
+# ---------- main pipeline ----------
 
 
 def process_pdf(pdf_path: str, out_dir: str = "output_csvs",
                 merged_name: str = "all_sections_clean_scored.csv",
-                exam_meta_name: str = "exam_metadata.csv"):
+                exam_meta_name: str = "exam_metadata.csv",
+                original_name_hint: Optional[str] = None,
+                exam_number_override: Optional[str] = None,
+                exam_date_override: Optional[str] = None):
     os.makedirs(out_dir, exist_ok=True)
     doc = fitz.open(pdf_path)
 
-    exam_number, exam_date = parse_title_fields(pdf_path, doc)
+    # Use metadata + original filename hint + stem
+    exam_number, exam_date = parse_title_fields(
+        pdf_path, doc, hint_name=original_name_hint)
 
+    # Optional overrides from the API
+    if exam_number_override is not None:
+        exam_number = str(exam_number_override)
+    if exam_date_override is not None:
+        exam_date = str(exam_date_override)
+
+    # Scaled score from first page
     scaled_score = ""
     if len(doc) > 0:
         m = SCALED_SCORE_RE.search(doc[0].get_text("text"))
@@ -312,7 +343,7 @@ def process_pdf(pdf_path: str, out_dir: str = "output_csvs",
         if "Section" not in txt:
             continue
 
-        # Which section number appears on this page, and is it experimental (*)?
+        # Section meta (incl. experimental marker *)
         meta: Dict[int, Dict] = {}
         for m in SECTION_HEADER_RE.finditer(txt):
             n = int(m.group(1))
@@ -341,21 +372,22 @@ def process_pdf(pdf_path: str, out_dir: str = "output_csvs",
                     "Section": sec_num,
                     "Question": r["Question"],
                     "Subtype": r["Subtype"],
-                    "Difficulty": r["Difficulty"],                 # integer
-                    "total_time_seconds": r["total_time_seconds"],  # integer
+                    "Difficulty": r["Difficulty"],               # int
+                    "total_time_seconds": r["total_time_seconds"],  # int
                     "question_score": r.get("question_score", 0),
                     "Flagged": r.get("Flagged", "FALSE"),
                     "experimental_section": "TRUE" if info["experimental"] else "FALSE",
                 })
+
     doc.close()
 
-    # Strip any accidental keys
+    # Clean stray legacy keys
     for r in merged_rows:
         r.pop("Exam Number", None)
         r.pop("exam_number", None)
-        r.pop("Total Question Time", None)  # old name, just in case
+        r.pop("Total Question Time", None)
 
-    # Write merged CSV (exam_number first)
+    # Write merged (exam_number first)
     merged_out = os.path.join(out_dir, merged_name)
     fieldnames = [
         "exam_number",
@@ -378,7 +410,7 @@ def process_pdf(pdf_path: str, out_dir: str = "output_csvs",
                 **r
             })
 
-    # Exam metadata CSV
+    # Write metadata
     meta_out = os.path.join(out_dir, exam_meta_name)
     with open(meta_out, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=[
@@ -393,17 +425,91 @@ def process_pdf(pdf_path: str, out_dir: str = "output_csvs",
     return merged_out, meta_out
 
 
+# ---------- CLI ----------
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser(
-        description="Merge LSAT sections to CSVs (with score, flag, and cleaned fields).")
+        description="Merge LSAT sections to CSVs (score, flag, cleaned fields).")
     ap.add_argument("pdf", help="Path to the PDF")
     ap.add_argument("--out", default="output_csvs", help="Output directory")
     ap.add_argument(
         "--merged_name", default="all_sections_clean_scored.csv", help="Merged CSV filename")
     ap.add_argument("--meta_name", default="exam_metadata.csv",
                     help="Metadata CSV filename")
+    ap.add_argument("--original_name_hint", default=None,
+                    help="Original client filename (e.g., 'LSAT Daigo 1 9_7_2024.pdf')")
+    ap.add_argument("--exam_number", default=None, help="Override exam_number")
+    ap.add_argument("--exam_date", default=None,
+                    help="Override exam_date (YYYY-MM-DD)")
     args = ap.parse_args()
-    merged_csv, meta_csv = process_pdf(args.pdf, out_dir=args.out,
-                                       merged_name=args.merged_name, exam_meta_name=args.meta_name)
+
+    merged_csv, meta_csv = process_pdf(
+        args.pdf,
+        out_dir=args.out,
+        merged_name=args.merged_name,
+        exam_meta_name=args.meta_name,
+        original_name_hint=args.original_name_hint,
+        exam_number_override=args.exam_number,
+        exam_date_override=args.exam_date,
+    )
     print("Wrote:\n -", merged_csv, "\n -", meta_csv)
+
+# ==== API adapters (do NOT change parsing logic above) ====
+
+
+def transform_file(pdf_path: str,
+                   original_name: Optional[str] = None,
+                   exam_number: Optional[str] = None,
+                   exam_date: Optional[str] = None) -> Tuple[str, str]:
+    """
+    Runs process_pdf and RETURNS CSV TEXT (not file paths).
+    Threads the original filename hint + optional overrides.
+    """
+    import tempfile
+    import os
+    import shutil
+    tmp_out = tempfile.mkdtemp(prefix="lsat_transform_")
+    try:
+        merged_csv_path, meta_csv_path = process_pdf(
+            pdf_path,
+            out_dir=tmp_out,
+            merged_name="all_sections_clean_scored.csv",
+            exam_meta_name="exam_metadata.csv",
+            original_name_hint=original_name,
+            exam_number_override=exam_number,
+            exam_date_override=exam_date,
+        )
+        with open(merged_csv_path, "r", encoding="utf-8") as f:
+            merged_csv_text = f.read()
+        with open(meta_csv_path, "r", encoding="utf-8") as f:
+            meta_csv_text = f.read()
+        return merged_csv_text, meta_csv_text
+    finally:
+        try:
+            shutil.rmtree(tmp_out)
+        except Exception:
+            pass
+
+
+def transform(pdf_bytes: bytes,
+              original_name: Optional[str] = None,
+              exam_number: Optional[str] = None,
+              exam_date: Optional[str] = None) -> Tuple[str, str]:
+    """
+    Bytes entrypoint: write a temp file and delegate to transform_file().
+    """
+    import tempfile
+    import os
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tf:
+        tf.write(pdf_bytes)
+        tmp_pdf = tf.name
+    try:
+        return transform_file(tmp_pdf,
+                              original_name=original_name,
+                              exam_number=exam_number,
+                              exam_date=exam_date)
+    finally:
+        try:
+            os.remove(tmp_pdf)
+        except Exception:
+            pass
