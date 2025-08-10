@@ -31,7 +31,7 @@ import {
   Database,
 } from "lucide-react";
 
-/* ---- Fixed subtype lists (used for visuals even if some categories are missing in data) ---- */
+/* ---- Fixed subtype lists ---- */
 const LOGICAL_REASONING_SUBTYPES = [
   "Assumptions",
   "Strengthen or Weaken",
@@ -43,13 +43,19 @@ const LOGICAL_REASONING_SUBTYPES = [
   "Explain or Resolve",
   "Techniques, Roles, and Principles",
 ];
-
 const READING_COMP_SUBTYPES = [
   "Humanities passages",
   "Law passages",
   "Social science passages",
   "Science passages",
 ];
+
+/* ---- Where to call the backend ---- */
+const DEFAULT_TRANSFORMER =
+  import.meta.env.VITE_TRANSFORMER_URL ||
+  (window.location.hostname === "localhost"
+    ? "http://localhost:8000/transform" // dev
+    : "https://lsat-tracker.onrender.com/transform"); // prod
 
 /* ---- CSV helpers ---- */
 function parseCSV(text) {
@@ -116,7 +122,6 @@ function parseCSV(text) {
       Object.fromEntries(header.map((h, idx) => [h, (r[idx] ?? "").trim()]))
     );
 }
-
 const headerMap = (obj) => {
   const map = {};
   for (const k of Object.keys(obj)) {
@@ -150,7 +155,6 @@ const headerMap = (obj) => {
   for (const [oldK, newK] of Object.entries(map)) out[newK] = obj[oldK];
   return out;
 };
-
 function inferSectionType(subtype) {
   if (!subtype) return "Unknown";
   if (LOGICAL_REASONING_SUBTYPES.includes(subtype)) return "Logical Reasoning";
@@ -177,14 +181,11 @@ const fmtMMSS = (sec) => {
 };
 
 export default function App() {
-  // Data in memory (we’ll wire Supabase later)
+  // Data in memory (DB wiring next step)
   const [rawRows, setRawRows] = useState([]);
   const [metaRows, setMetaRows] = useState([]);
 
-  // Backend endpoint hosting your Python transformer
-  const [transformerUrl, setTransformerUrl] = useState("");
-
-  // NEW: optional overrides (threaded to the backend)
+  // Exam overrides (optional)
   const [examNumberOverride, setExamNumberOverride] = useState("");
   const [examDateOverride, setExamDateOverride] = useState(""); // YYYY-MM-DD
 
@@ -197,20 +198,22 @@ export default function App() {
 
   // Upload PDF → backend → 2 CSVs → parse → append
   const onUploadPdf = async (file) => {
-    if (!transformerUrl) {
-      alert("Add your transformer URL first.");
-      return;
-    }
     try {
       const fd = new FormData();
       fd.append("file", file);
       if (examNumberOverride.trim())
         fd.append("exam_number", examNumberOverride.trim());
       if (examDateOverride.trim())
-        fd.append("exam_date", examDateOverride.trim()); // YYYY-MM-DD
+        fd.append("exam_date", examDateOverride.trim());
 
-      const res = await fetch(transformerUrl, { method: "POST", body: fd });
-      if (!res.ok) throw new Error(`Transformer error ${res.status}`);
+      const res = await fetch(DEFAULT_TRANSFORMER, {
+        method: "POST",
+        body: fd,
+      });
+      if (!res.ok) {
+        const detail = await tryGetDetail(res);
+        throw new Error(detail || `Transformer error ${res.status}`);
+      }
 
       const contentType = res.headers.get("content-type") || "";
       let allCsv = "",
@@ -225,10 +228,8 @@ export default function App() {
         allCsv = parts[0] || text;
         metaCsv = parts[1] || "";
       }
-      if (!allCsv.trim() || !metaCsv.trim()) {
-        alert("Transformer response missing one of the CSVs.");
-        return;
-      }
+      if (!allCsv.trim() || !metaCsv.trim())
+        throw new Error("Transformer response missing one of the CSVs.");
 
       const parsedRows = parseCSV(allCsv)
         .map(headerMap)
@@ -248,7 +249,6 @@ export default function App() {
           section_type:
             r.section_type || inferSectionType((r.subtype || "").trim()),
         }));
-
       const parsedMeta = parseCSV(metaCsv)
         .map(headerMap)
         .map((r) => ({
@@ -257,14 +257,14 @@ export default function App() {
           scaled_score: toNum(r.scaled_score ?? r.score, null),
         }));
 
-      const nextRows = mergeRows(rawRows, parsedRows);
-      const nextMeta = mergeMeta(metaRows, parsedMeta);
-      setRawRows(nextRows);
-      setMetaRows(nextMeta);
+      setRawRows((prev) => mergeRows(prev, parsedRows));
+      setMetaRows((prev) => mergeMeta(prev, parsedMeta));
       alert("Test transformed and uploaded.");
     } catch (e) {
       console.error(e);
-      alert("Failed to transform this PDF. Check console and backend.");
+      alert(
+        e.message || "Failed to transform this PDF. Check console and backend."
+      );
     }
   };
 
@@ -459,17 +459,6 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  const chartColors = [
-    "#0ea5e9",
-    "#10b981",
-    "#f97316",
-    "#a78bfa",
-    "#f43f5e",
-    "#14b8a6",
-    "#eab308",
-    "#64748b",
-  ];
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
@@ -479,19 +468,26 @@ export default function App() {
         </div>
       </header>
 
-      {/* Data input */}
+      {/* Upload */}
       <div className="max-w-7xl mx-auto px-4 py-4 grid md:grid-cols-2 gap-4">
         <section className="bg-white rounded-2xl shadow p-4">
           <h2 className="font-semibold mb-3 flex items-center gap-2">
-            <Upload className="w-4 h-4" /> Data Input
+            <Upload className="w-4 h-4" /> Transform & Upload Test
           </h2>
           <div className="grid gap-3">
             <div className="grid md:grid-cols-3 gap-2">
               <input
-                value={transformerUrl}
-                onChange={(e) => setTransformerUrl(e.target.value)}
-                placeholder="https://your-transformer-url/transform"
-                className="md:col-span-2 px-3 py-2 rounded-xl border text-sm"
+                value={examNumberOverride}
+                onChange={(e) => setExamNumberOverride(e.target.value)}
+                placeholder="Exam # (optional)"
+                className="px-3 py-2 rounded-xl border text-sm"
+              />
+              <input
+                type="date"
+                value={examDateOverride}
+                onChange={(e) => setExamDateOverride(e.target.value)}
+                placeholder="YYYY-MM-DD"
+                className="px-3 py-2 rounded-xl border text-sm"
               />
               <label className="inline-flex items-center justify-center px-3 py-2 rounded-xl bg-slate-900 text-white cursor-pointer">
                 <input
@@ -503,29 +499,13 @@ export default function App() {
                     if (f) onUploadPdf(f);
                   }}
                 />
-                Transform & Upload Test
+                Choose PDF & Upload
               </label>
             </div>
-
-            {/* NEW: optional overrides */}
-            <div className="grid md:grid-cols-3 gap-2">
-              <input
-                value={examNumberOverride}
-                onChange={(e) => setExamNumberOverride(e.target.value)}
-                placeholder="Override exam # (optional)"
-                className="px-3 py-2 rounded-xl border text-sm"
-              />
-              <input
-                type="date"
-                value={examDateOverride}
-                onChange={(e) => setExamDateOverride(e.target.value)}
-                placeholder="YYYY-MM-DD"
-                className="px-3 py-2 rounded-xl border text-sm"
-              />
-              <div className="text-xs text-slate-500 flex items-center">
-                If filename is generic, set these.
-              </div>
-            </div>
+            <p className="text-xs text-slate-500">
+              If your filename is generic, set Exam # and Exam date so the
+              parser is correct.
+            </p>
           </div>
         </section>
 
@@ -613,8 +593,7 @@ export default function App() {
           <div className="bg-white rounded-2xl shadow p-6 text-center">
             <h2 className="text-lg font-semibold">No data yet</h2>
             <p className="text-slate-600 mt-1">
-              Add your Transformer URL, set optional overrides, then click{" "}
-              <em>Transform & Upload Test</em>.
+              Set optional overrides, then click <em>Choose PDF & Upload</em>.
             </p>
           </div>
         ) : null}
@@ -806,16 +785,12 @@ export default function App() {
           <h2 className="font-semibold mb-2">How it works</h2>
           <ul className="list-disc ml-5 text-sm text-slate-700 space-y-1">
             <li>
-              Paste your <strong>Transformer URL</strong>.
+              Set optional <strong>Exam #</strong> and{" "}
+              <strong>Exam date</strong> (YYYY-MM-DD).
             </li>
             <li>
-              Optionally set <strong>Exam #</strong> and{" "}
-              <strong>Exam date</strong> (YYYY-MM-DD) if your filename is
-              generic.
-            </li>
-            <li>
-              Click <strong>Transform & Upload Test</strong> and select a PDF.
-              Your data appears below.
+              Click <strong>Choose PDF & Upload</strong>. Your data appears
+              below and aggregates across uploads.
             </li>
           </ul>
         </div>
@@ -848,4 +823,13 @@ function KpiCard({ title, value, icon }) {
       </div>
     </div>
   );
+}
+
+async function tryGetDetail(res) {
+  try {
+    const j = await res.clone().json();
+    return j?.detail;
+  } catch {
+    return null;
+  }
 }
