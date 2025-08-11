@@ -67,11 +67,7 @@ export default function Dashboard({ user, onSignOut }) {
   }, [user]);
 
   const bySectionType = useMemo(() => {
-    const sectionTypes = [
-      "Logical Reasoning",
-      "Reading Comprehension",
-      "Unknown",
-    ];
+    const sectionTypes = ["Logical Reasoning", "Reading Comprehension"];
     return sectionTypes.map((st) => {
       const subset = joined.rows.filter((r) => r.section_type === st);
       const attempted = subset.length || 0;
