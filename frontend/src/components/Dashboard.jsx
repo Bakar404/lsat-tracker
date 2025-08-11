@@ -7,11 +7,10 @@ import {
   Clock,
   Flag,
   LogOut,
-  Upload,
   Filter,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import UploadPanel from "./UploadPanel";
+import UploadDropdown from "./UploadDropdown";
 import FiltersPanel from "./FiltersPanel";
 import KpiCard from "./cards/KpiCard";
 
@@ -159,15 +158,25 @@ export default function Dashboard({ user, onSignOut }) {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-slate-900 rounded-xl">
-              <Layers3 className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">LSAT Tracker</h1>
-              <p className="text-sm text-slate-500">
-                Welcome back, {user?.email}
-              </p>
+          <div className="flex items-center gap-4">
+            {/* Upload Test Button */}
+            <UploadDropdown
+              user={user}
+              onAfterUpload={() => window.location.reload()}
+            />
+
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-slate-900 rounded-xl">
+                <Layers3 className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">
+                  LSAT Tracker
+                </h1>
+                <p className="text-sm text-slate-500">
+                  Welcome back, {user?.email}
+                </p>
+              </div>
             </div>
           </div>
           <button
@@ -181,46 +190,28 @@ export default function Dashboard({ user, onSignOut }) {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Upload and Filters Section */}
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
-                <Upload className="w-5 h-5 text-blue-600" />
-              </div>
-              <h2 className="text-lg font-semibold text-slate-900">
-                Upload Test
-              </h2>
+        {/* Filters Section */}
+        <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-lg">
+              <Filter className="w-5 h-5 text-green-600" />
             </div>
-            <UploadPanel
-              user={user}
-              profile={profile}
-              onAfterUpload={() => window.location.reload()}
-            />
+            <h2 className="text-lg font-semibold text-slate-900">Filters</h2>
           </div>
-
-          <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-lg">
-                <Filter className="w-5 h-5 text-green-600" />
-              </div>
-              <h2 className="text-lg font-semibold text-slate-900">Filters</h2>
-            </div>
-            <FiltersPanel
-              rows={joined.rows}
-              examFilter={examFilter}
-              setExamFilter={setExamFilter}
-              sectionFilter={sectionFilter}
-              setSectionFilter={setSectionFilter}
-              flagFilter={flagFilter}
-              setFlagFilter={setFlagFilter}
-              dateFrom={dateFrom}
-              setDateFrom={setDateFrom}
-              dateTo={dateTo}
-              setDateTo={setDateTo}
-              onExport={downloadCSV}
-            />
-          </div>
+          <FiltersPanel
+            rows={joined.rows}
+            examFilter={examFilter}
+            setExamFilter={setExamFilter}
+            sectionFilter={sectionFilter}
+            setSectionFilter={setSectionFilter}
+            flagFilter={flagFilter}
+            setFlagFilter={setFlagFilter}
+            dateFrom={dateFrom}
+            setDateFrom={setDateFrom}
+            dateTo={dateTo}
+            setDateTo={setDateTo}
+            onExport={downloadCSV}
+          />
         </div>
 
         {/* Empty State */}
@@ -245,8 +236,8 @@ export default function Dashboard({ user, onSignOut }) {
                   No data yet
                 </h3>
                 <p className="text-slate-500">
-                  Upload your first LSAT PDF above to get started with tracking
-                  your progress.
+                  Click "Upload Test" in the header to upload your first LSAT
+                  PDF and start tracking your progress.
                 </p>
               </div>
             )}
