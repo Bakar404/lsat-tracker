@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Layers3,
   Database,
@@ -26,9 +26,11 @@ import {
   LOGICAL_REASONING_SUBTYPES,
   READING_COMP_SUBTYPES,
 } from "./hooks/useData";
+import { supabase } from "./lib/supabase";
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const {
     loading,
     joined,
@@ -46,6 +48,24 @@ export default function App() {
     setDateTo,
     uploadPdfAndUpsert,
   } = useData(user || undefined);
+
+  useEffect(() => {
+    if (!user) return; // Only run if logged in
+
+    (async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("approved, full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching profile:", error);
+        return;
+      }
+      setProfile(data);
+    })();
+  }, [user]);
 
   const bySectionType = useMemo(() => {
     const sectionTypes = [
@@ -149,12 +169,11 @@ export default function App() {
       {/* Inputs */}
       <div className="max-w-7xl mx-auto px-4 py-4 grid md:grid-cols-2 gap-4">
         <UploadPanel
-          disabled={!user}
-          onUpload={({ file, examNumberOverride, examDateOverride }) =>
+          user={user}
+          profile={profile}
+          onUploadPdf={(file) =>
             uploadPdfAndUpsert({
               file,
-              examNumberOverride,
-              examDateOverride,
               user,
             })
               .then(() => alert("Test transformed and saved."))
