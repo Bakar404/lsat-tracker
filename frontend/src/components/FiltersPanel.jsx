@@ -16,8 +16,7 @@ export default function FiltersPanel({
 }) {
   const exams = Array.from(new Set(rows.map((r) => String(r.exam_number))));
   return (
-    <section className="bg-white rounded-2xl shadow p-4">
-      <h2 className="font-semibold mb-3">Filters</h2>
+    <div className="space-y-4">
       <div className="grid sm:grid-cols-2 gap-3">
         <div>
           <label className="text-sm text-slate-600">Exam</label>
@@ -86,6 +85,6 @@ export default function FiltersPanel({
           Export filtered CSV
         </button>
       </div>
-    </section>
+    </div>
   );
 }

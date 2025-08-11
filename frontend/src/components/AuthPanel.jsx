@@ -1,155 +1,104 @@
-import React, { useEffect, useState } from "react";
-import { supabase, TABLES } from "../lib/supabase";
+// src/components/AuthPanel.jsx
+import React, { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase";
 
 export default function AuthPanel({ onAuthed }) {
-  const [mode, setMode] = useState("signin"); // 'signin' | 'signup'
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [user, setUser] = useState(null);
-  const isAuthed = !!user;
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
 
   useEffect(() => {
-    (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const approved = await isApproved(user.id);
-        if (approved) {
-          setUser(user);
-          onAuthed(user);
-        }
-      }
-    })();
-    const { data: sub } = supabase.auth.onAuthStateChange(
-      async (_e, session) => {
-        const u = session?.user ?? null;
-        if (!u) {
-          setUser(null);
-          onAuthed(null);
-          return;
-        }
-        const approved = await isApproved(u.id);
-        if (approved) {
-          setUser(u);
-          onAuthed(u);
-        } else {
-          alert(
-            "Your email is verified, but your account is awaiting admin approval."
-          );
-          await supabase.auth.signOut();
-        }
-      }
-    );
-    return () => sub.subscription.unsubscribe();
-  }, []);
-
-  async function isApproved(userId) {
-    const { data, error } = await supabase
-      .from(TABLES.profiles)
-      .select("approved")
-      .eq("id", userId)
-      .maybeSingle();
-    if (error) {
-      console.error(error);
-      return false;
-    }
-    return !!data?.approved;
-  }
-
-  async function signUp() {
-    if (!email || !password) return alert("Email & password required.");
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: window.location.origin },
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) onAuthed(session.user);
     });
-    if (error) return alert(error.message);
-    alert(
-      "Sign-up successful. Check your email to confirm. After confirmation, an admin must approve your account."
-    );
-  }
+    return () => sub.subscription.unsubscribe();
+  }, [onAuthed]);
 
-  async function signIn() {
-    if (!email || !password) return alert("Email & password required.");
+  const signUp = async () => {
+    setBusy(true);
+    setMsg("");
+    const { error } = await supabase.auth.signUp({ email, password });
+    setBusy(false);
+    if (error) return setMsg(error.message);
+    setMsg(
+      "Check your email to confirm your account. After you confirm, an admin must approve you."
+    );
+  };
+
+  const signIn = async () => {
+    setBusy(true);
+    setMsg("");
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    if (error) return alert(error.message);
-    const u = data.user;
-    const approved = await isApproved(u.id);
-    if (!approved) {
-      alert(
-        "Your account is not approved yet. Please wait for admin approval."
-      );
-      await supabase.auth.signOut();
-      return;
+    setBusy(false);
+    if (error) {
+      // Friendly messages
+      if (error.message.toLowerCase().includes("email not confirmed")) {
+        return setMsg(
+          "Email not confirmed yet. Please confirm via the link we sent."
+        );
+      }
+      if (error.message.toLowerCase().includes("invalid login credentials")) {
+        return setMsg("Invalid credentials. Double-check email/password.");
+      }
+      return setMsg(error.message);
     }
-    setUser(u);
-    onAuthed(u);
-  }
+    // Signed in — RLS will still block data writes until admin flips profiles.approved = true
+    onAuthed?.(data.user);
+  };
 
-  async function signOut() {
+  const signOut = async () => {
     await supabase.auth.signOut();
-    setUser(null);
-    onAuthed(null);
-  }
+    setMsg("Signed out.");
+  };
 
   return (
-    <div className="flex items-center gap-2">
-      {!isAuthed ? (
-        <>
-          <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value)}
-            className="px-2 py-1.5 rounded-xl border text-sm"
-            title="Auth mode"
-          >
-            <option value="signin">Sign in</option>
-            <option value="signup">Sign up</option>
-          </select>
-          <input
-            type="email"
-            className="px-3 py-1.5 rounded-xl border text-sm"
-            placeholder="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            type="password"
-            className="px-3 py-1.5 rounded-xl border text-sm"
-            placeholder="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          {mode === "signup" ? (
-            <button
-              onClick={signUp}
-              className="px-3 py-1.5 rounded-xl bg-slate-900 text-white text-sm"
-            >
-              Sign up
-            </button>
-          ) : (
-            <button
-              onClick={signIn}
-              className="px-3 py-1.5 rounded-xl bg-slate-900 text-white text-sm"
-            >
-              Sign in
-            </button>
-          )}
-        </>
-      ) : (
-        <>
-          <span className="text-sm text-slate-600">{user.email}</span>
+    <div className="bg-white rounded-2xl shadow p-4">
+      <div className="grid sm:grid-cols-3 gap-2">
+        <input
+          className="px-3 py-2 rounded-xl border text-sm"
+          type="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          className="px-3 py-2 rounded-xl border text-sm"
+          type="password"
+          placeholder="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <div className="flex gap-2">
           <button
-            onClick={signOut}
-            className="px-3 py-1.5 rounded-xl border text-sm"
+            disabled={busy}
+            onClick={signIn}
+            className={`px-3 py-2 rounded-xl text-white text-sm ${
+              busy ? "bg-slate-400" : "bg-slate-900"
+            }`}
           >
-            Sign out
+            {busy ? "Signing in..." : "Sign in"}
           </button>
-        </>
-      )}
+          <button
+            disabled={busy}
+            onClick={signUp}
+            className={`px-3 py-2 rounded-xl border text-sm ${
+              busy
+                ? "border-slate-300 text-slate-400"
+                : "border-slate-300 text-slate-900"
+            }`}
+          >
+            {busy ? "Signing up..." : "Sign up"}
+          </button>
+        </div>
+      </div>
+      {msg ? <p className="text-xs text-slate-600 mt-2">{msg}</p> : null}
+      <button onClick={signOut} className="mt-2 text-xs underline">
+        Sign out
+      </button>
     </div>
   );
 }
