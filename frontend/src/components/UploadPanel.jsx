@@ -127,8 +127,20 @@ export default function UploadPanel({ user, profile, onAfterUpload }) {
   const [examNumber, setExamNumber] = useState("");
   const [examDate, setExamDate] = useState(""); // yyyy-mm-dd
   const [busy, setBusy] = useState(false);
+  const [touched, setTouched] = useState({
+    examNumber: false,
+    examDate: false
+  });
 
   const valid = !!examNumber.trim() && /^\d{4}-\d{2}-\d{2}$/.test(examDate);
+  
+  // Validation errors only show if field is touched
+  const errors = {
+    examNumber: touched.examNumber && !examNumber.trim(),
+    examDate: touched.examDate && (!examDate.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(examDate))
+  };
+  
+  const hasVisibleErrors = Object.values(errors).some(Boolean);
 
   const onUploadPdf = async (file) => {
     if (!user) return alert("Sign in first.");
@@ -231,6 +243,7 @@ export default function UploadPanel({ user, profile, onAfterUpload }) {
 
       setExamNumber("");
       setExamDate("");
+      setTouched({ examNumber: false, examDate: false }); // reset touched state
       onAfterUpload?.(); // caller should re-fetch
       alert("Test transformed and saved.");
     } catch (e) {
@@ -248,9 +261,10 @@ export default function UploadPanel({ user, profile, onAfterUpload }) {
           <input
             value={examNumber}
             onChange={(e) => setExamNumber(e.target.value)}
+            onBlur={() => setTouched(prev => ({ ...prev, examNumber: true }))}
             placeholder="Exam # (required)"
             className={`px-3 py-2 rounded-xl border text-sm ${
-              !examNumber.trim()
+              errors.examNumber
                 ? "border-red-300 bg-red-50"
                 : "border-gray-300"
             }`}
@@ -260,8 +274,9 @@ export default function UploadPanel({ user, profile, onAfterUpload }) {
             type="date"
             value={examDate}
             onChange={(e) => setExamDate(e.target.value)}
+            onBlur={() => setTouched(prev => ({ ...prev, examDate: true }))}
             className={`px-3 py-2 rounded-xl border text-sm ${
-              !examDate.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(examDate)
+              errors.examDate
                 ? "border-red-300 bg-red-50"
                 : "border-gray-300"
             }`}
@@ -287,17 +302,15 @@ export default function UploadPanel({ user, profile, onAfterUpload }) {
             {busy ? "Uploading…" : "Choose PDF & Upload"}
           </label>
         </div>
-        {(!examNumber.trim() ||
-          !examDate.trim() ||
-          !/^\d{4}-\d{2}-\d{2}$/.test(examDate)) && (
+        {hasVisibleErrors && (
           <div className="text-sm text-red-600 bg-red-50 p-2 rounded-lg">
             <strong>Required fields missing:</strong>
             <ul className="list-disc ml-4 mt-1">
-              {!examNumber.trim() && <li>Exam Number is required</li>}
-              {!examDate.trim() && <li>Exam Date is required</li>}
-              {examDate.trim() && !/^\d{4}-\d{2}-\d{2}$/.test(examDate) && (
+              {errors.examNumber && <li>Exam Number is required</li>}
+              {errors.examDate && examDate.trim() && !/^\d{4}-\d{2}-\d{2}$/.test(examDate) && (
                 <li>Exam Date must be in YYYY-MM-DD format</li>
               )}
+              {errors.examDate && !examDate.trim() && <li>Exam Date is required</li>}
             </ul>
           </div>
         )}
