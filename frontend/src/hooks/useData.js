@@ -151,7 +151,9 @@ export function useData(user) {
   // Updated filters to support multiple selections
   const [examFilter, setExamFilter] = useState([]);
   const [sectionFilter, setSectionFilter] = useState([]);
-  const [flagFilter, setFlagFilter] = useState("all");
+  const [sectionTypeFilter, setSectionTypeFilter] = useState([]);
+  const [subtypeFilter, setSubtypeFilter] = useState([]);
+  const [flagFilter, setFlagFilter] = useState([]);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
@@ -200,13 +202,33 @@ export function useData(user) {
     if (examFilter.length > 0)
       out = out.filter((r) => examFilter.includes(String(r.exam_number)));
     
-    // Apply multiple section type filter  
+    // Apply multiple section filter  
     if (sectionFilter.length > 0)
-      out = out.filter((r) => sectionFilter.includes(r.section_type));
+      out = out.filter((r) => sectionFilter.includes(r.section));
     
-    // Apply flagged filter (keep as single selection)
-    if (flagFilter === "flagged") out = out.filter((r) => !!r.flagged);
-    if (flagFilter === "unflagged") out = out.filter((r) => !r.flagged);
+    // Apply multiple section type filter  
+    if (sectionTypeFilter.length > 0)
+      out = out.filter((r) => sectionTypeFilter.includes(r.section_type));
+    
+    // Apply multiple subtype filter
+    if (subtypeFilter.length > 0)
+      out = out.filter((r) => subtypeFilter.includes(r.subtype));
+    
+    // Apply multiple flagged filter
+    if (flagFilter.length > 0) {
+      out = out.filter((r) => {
+        if (flagFilter.includes("Flagged") && flagFilter.includes("Not Flagged")) {
+          return true; // Show all if both are selected
+        }
+        if (flagFilter.includes("Flagged")) {
+          return !!r.flagged;
+        }
+        if (flagFilter.includes("Not Flagged")) {
+          return !r.flagged;
+        }
+        return true;
+      });
+    }
 
     const fromOk = dateFrom ? new Date(dateFrom) : null;
     const toOk = dateTo ? new Date(dateTo) : null;
@@ -221,6 +243,8 @@ export function useData(user) {
     metaRows,
     examFilter,
     sectionFilter,
+    sectionTypeFilter,
+    subtypeFilter,
     flagFilter,
     dateFrom,
     dateTo,
@@ -444,6 +468,10 @@ export function useData(user) {
     setExamFilter,
     sectionFilter,
     setSectionFilter,
+    sectionTypeFilter,
+    setSectionTypeFilter,
+    subtypeFilter,
+    setSubtypeFilter,
     flagFilter,
     setFlagFilter,
     dateFrom,
