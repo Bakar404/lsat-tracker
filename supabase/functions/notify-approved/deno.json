@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "lib": ["deno.window", "dom"],
+    "strict": true,
+    "allowJs": true
+  },
+  "fmt": {
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "tasks": {
+    "dev": "deno run --allow-net --allow-env index.ts"
+  }
+}
