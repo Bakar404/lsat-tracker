@@ -43,6 +43,10 @@ export default function Dashboard({ user, onSignOut }) {
     setExamFilter,
     sectionFilter,
     setSectionFilter,
+    sectionTypeFilter,
+    setSectionTypeFilter,
+    subtypeFilter,
+    setSubtypeFilter,
     flagFilter,
     setFlagFilter,
     dateFrom,
@@ -201,7 +205,6 @@ export default function Dashboard({ user, onSignOut }) {
           <div className="flex gap-2">
             {[
               { id: "analytics", label: "Analytics", icon: Flag },
-              { id: "data", label: "Data Table", icon: Table },
               { id: "tests", label: "Manage Tests", icon: FileText },
             ].map(({ id, label, icon: Icon }) => (
               <button
@@ -220,8 +223,8 @@ export default function Dashboard({ user, onSignOut }) {
           </div>
         </div>
 
-        {/* Filters Section - Show on analytics and data tabs */}
-        {(activeTab === "analytics" || activeTab === "data") && (
+        {/* Filters Section - Show only on analytics tab */}
+        {activeTab === "analytics" && (
           <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-lg">
@@ -235,6 +238,10 @@ export default function Dashboard({ user, onSignOut }) {
               setExamFilter={setExamFilter}
               sectionFilter={sectionFilter}
               setSectionFilter={setSectionFilter}
+              sectionTypeFilter={sectionTypeFilter}
+              setSectionTypeFilter={setSectionTypeFilter}
+              subtypeFilter={subtypeFilter}
+              setSubtypeFilter={setSubtypeFilter}
               flagFilter={flagFilter}
               setFlagFilter={setFlagFilter}
               dateFrom={dateFrom}
@@ -254,18 +261,6 @@ export default function Dashboard({ user, onSignOut }) {
               // Refresh data after test deletion
               window.location.reload();
             }} 
-          />
-        ) : activeTab === "data" ? (
-          <DataTable 
-            data={joined.rows} 
-            onDeleteTest={async (examNumber) => {
-              try {
-                await deleteTest(examNumber);
-                alert(`Test ${examNumber} has been deleted successfully.`);
-              } catch (error) {
-                alert("Failed to delete test");
-              }
-            }}
           />
         ) : (
           // Analytics Tab Content
@@ -409,6 +404,11 @@ export default function Dashboard({ user, onSignOut }) {
                   {/* Row 3 */}
                   <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 overflow-hidden">
                     <AvgTimeBar data={bySubtype} fmt={fmtMMSS} />
+                  </div>
+
+                  {/* Data Table - Full Width at Bottom */}
+                  <div className="w-full">
+                    <DataTable data={joined.rows} />
                   </div>
                 </div>
               </>
