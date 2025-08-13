@@ -10,12 +10,14 @@ import {
   Filter,
   Table,
   FileText,
+  UserCheck,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import UploadDropdown from "./UploadDropdown";
 import FiltersPanelMulti from "./FiltersPanelMulti";
 import DataTable from "./DataTable";
 import TestManager from "./TestManager";
+import AdminPanel from "./AdminPanel";
 import KpiCard from "./cards/KpiCard";
 
 import SectionAccuracyChart from "../charts/SectionAccuracyChart";
@@ -63,7 +65,7 @@ export default function Dashboard({ user, onSignOut }) {
     (async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("approved, full_name")
+        .select("approved, full_name, is_admin")
         .eq("id", user.id)
         .maybeSingle();
 
@@ -249,6 +251,9 @@ export default function Dashboard({ user, onSignOut }) {
             {[
               { id: "analytics", label: "Analytics", icon: Flag },
               { id: "tests", label: "Manage Tests", icon: FileText },
+              ...(profile?.is_admin
+                ? [{ id: "admin", label: "Admin", icon: UserCheck }]
+                : []),
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -305,6 +310,8 @@ export default function Dashboard({ user, onSignOut }) {
               window.location.reload();
             }}
           />
+        ) : activeTab === "admin" ? (
+          <AdminPanel user={user} />
         ) : (
           // Analytics Tab Content
           <>
