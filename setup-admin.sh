@@ -1,14 +1,15 @@
 #!/bin/bash
 
-# Apply the admin column migration directly to your Supabase database
+# 🔒 SECURITY-CONSCIOUS SETUP SCRIPT
 
-echo "Applying admin column migration to Supabase..."
-
-# Execute the SQL to add the is_admin column
-supabase db remote commit --schema public
-
-echo "Migration complete!"
+echo "🔒 Setting up LSAT Tracker Admin..."
 echo ""
+echo "⚠️  SECURITY REMINDER:"
+echo "    - Never commit .env files to git"
+echo "    - Keep your service role key secret"
+echo "    - Only share anon keys (they're designed to be public)"
+echo ""
+
 echo "Next steps:"
 echo "1. Go to your Supabase dashboard: https://supabase.com/dashboard/project/yguclnshbucubicdgssk/editor"
 echo "2. Run this SQL to add the admin column:"
@@ -19,3 +20,7 @@ echo "   UPDATE profiles SET is_admin = TRUE WHERE id = 'YOUR_USER_ID';"
 echo ""
 echo "4. Your Edge Function is deployed at:"
 echo "   https://yguclnshbucubicdgssk.supabase.co/functions/v1/notify-approved"
+echo ""
+echo "🔐 For testing the Edge Function securely:"
+echo "   export SUPABASE_SERVICE_ROLE_KEY='your_service_role_key'"
+echo "   ./test-function.sh 'user_id_here'"

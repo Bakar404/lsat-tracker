@@ -1,21 +1,47 @@
 #!/bin/bash
 
 # Test the notify-approved Edge Function
-# Replace USER_ID with an actual user ID from your auth.users table
+# SECURITY: This script uses environment variables to avoid exposing secrets
 
+# Check if required environment variables are set
+if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+    echo "❌ Error: SUPABASE_SERVICE_ROLE_KEY environment variable is not set"
+    echo ""
+    echo "To use this script, first set your service role key:"
+    echo "export SUPABASE_SERVICE_ROLE_KEY='your_service_role_key_here'"
+    echo ""
+    echo "You can find your service role key in:"
+    echo "https://supabase.com/dashboard/project/yguclnshbucubicdgssk/settings/api"
+    exit 1
+fi
+
+if [ -z "$1" ]; then
+    echo "❌ Error: User ID is required"
+    echo ""
+    echo "Usage: $0 <USER_ID>"
+    echo "Example: $0 12345678-1234-1234-1234-123456789012"
+    echo ""
+    echo "You can find user IDs in your Supabase dashboard:"
+    echo "https://supabase.com/dashboard/project/yguclnshbucubicdgssk/auth/users"
+    exit 1
+fi
+
+USER_ID="$1"
 FUNCTION_URL="https://yguclnshbucubicdgssk.supabase.co/functions/v1/notify-approved"
-SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlndWNsbnNoYnVjdWJpY2Rnc3NrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDg2ODkwOCwiZXhwIjoyMDcwNDQ0OTA4fQ.dhgg1y5zrz1zN_SyRxDcnGePoiBg-74VK_kd8lzJoZA"
 
-echo "Testing notify-approved function..."
-echo "Note: Replace USER_ID with an actual user ID from your database"
+echo "🧪 Testing notify-approved function..."
+echo "📧 User ID: $USER_ID"
+echo "🔗 Function URL: $FUNCTION_URL"
 echo ""
 
-# Example test call (you'll need to replace USER_ID with a real one)
+# Test the function
 curl -X POST "$FUNCTION_URL" \
-  -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
+  -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"user_id": "REPLACE_WITH_ACTUAL_USER_ID"}'
+  -d "{\"user_id\": \"$USER_ID\"}" \
+  -w "\n\nHTTP Status: %{http_code}\nTotal time: %{time_total}s\n"
 
 echo ""
-echo "Function URL: $FUNCTION_URL"
+echo "✅ Test complete!"
+echo "📊 Check the logs at: https://supabase.com/dashboard/project/yguclnshbucubicdgssk/functions"
 echo "Dashboard: https://supabase.com/dashboard/project/yguclnshbucubicdgssk/functions"

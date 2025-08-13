@@ -13,12 +13,12 @@ export default function AuthCallback({ onGoBack }) {
         const hashParams = new URLSearchParams(
           window.location.hash.substring(1)
         );
-        
+
         // Check for error parameters first
         const error = hashParams.get("error");
         const errorCode = hashParams.get("error_code");
         const errorDescription = hashParams.get("error_description");
-        
+
         if (error) {
           setStatus("error");
           if (errorCode === "otp_expired") {
@@ -30,16 +30,14 @@ export default function AuthCallback({ onGoBack }) {
               "Email confirmation failed or was denied. Please try signing up again."
             );
           } else {
-            setMessage(
-              errorDescription || `Authentication error: ${error}`
-            );
+            setMessage(errorDescription || `Authentication error: ${error}`);
           }
-          
+
           // Clear the hash from URL
           window.history.replaceState(null, null, window.location.pathname);
           return;
         }
-        
+
         // Check for success parameters
         const accessToken = hashParams.get("access_token");
         const refreshToken = hashParams.get("refresh_token");
@@ -65,7 +63,8 @@ export default function AuthCallback({ onGoBack }) {
           window.history.replaceState(null, null, window.location.pathname);
         } else {
           // Try to handle the session with Supabase auth
-          const { data, error: sessionError } = await supabase.auth.getSession();
+          const { data, error: sessionError } =
+            await supabase.auth.getSession();
 
           if (sessionError) {
             setStatus("error");
@@ -152,15 +151,18 @@ export default function AuthCallback({ onGoBack }) {
                 Confirmation Failed
               </h2>
               <p className="text-slate-600 mb-6">{message}</p>
-              
+
               {message.includes("expired") && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                   <p className="text-sm text-yellow-800">
-                    <strong>What to do next:</strong> Email confirmation links expire after 24 hours for security. Simply sign up again with the same email address to receive a new confirmation link.
+                    <strong>What to do next:</strong> Email confirmation links
+                    expire after 24 hours for security. Simply sign up again
+                    with the same email address to receive a new confirmation
+                    link.
                   </p>
                 </div>
               )}
-              
+
               <div className="space-y-3">
                 <button
                   onClick={onGoBack}
@@ -169,10 +171,11 @@ export default function AuthCallback({ onGoBack }) {
                   <ArrowLeft className="w-4 h-4" />
                   Return to Sign In
                 </button>
-                
+
                 {message.includes("expired") && (
                   <p className="text-sm text-slate-500">
-                    You can sign up again with the same email to get a new confirmation link.
+                    You can sign up again with the same email to get a new
+                    confirmation link.
                   </p>
                 )}
               </div>

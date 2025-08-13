@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LSAT Tracker - Email Confirmation Test</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+        line-height: 1.6;
+        color: #333;
+      }
+      .container {
+        background: #f8f9fa;
+        padding: 30px;
+        border-radius: 12px;
+        border: 1px solid #e9ecef;
+      }
+      h1 {
+        color: #0ea5e9;
+        margin-bottom: 20px;
+      }
+      h2 {
+        color: #495057;
+        margin-top: 30px;
+        margin-bottom: 15px;
+      }
+      .status {
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+      }
+      .success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+      }
+      .warning {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+      }
+      .info {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+      }
+      code {
+        background: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: Monaco, Consolas, monospace;
+      }
+      .test-url {
+        background: #ffffff;
+        padding: 15px;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        font-family: Monaco, Consolas, monospace;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📚 LSAT Tracker - Email Confirmation Testing</h1>
+
+      <div class="info">
+        <strong>Status:</strong> Email confirmation error handling has been
+        fixed! ✅
+      </div>
+
+      <h2>🔧 What Was Fixed:</h2>
+      <ul>
+        <li>
+          <strong>Error Parameter Handling:</strong> AuthCallback now properly
+          reads Supabase error parameters
+        </li>
+        <li>
+          <strong>Expired Link Detection:</strong> Specific handling for
+          <code>otp_expired</code> errors
+        </li>
+        <li>
+          <strong>User-Friendly Messages:</strong> Clear explanations and next
+          steps
+        </li>
+        <li>
+          <strong>Improved UX:</strong> Better visual feedback for different
+          error states
+        </li>
+      </ul>
+
+      <h2>🧪 Testing the Flow:</h2>
+
+      <div class="warning">
+        <strong>For Expired Links:</strong> If you click an email confirmation
+        link that's expired, you'll now see a helpful message explaining that
+        links expire after 24 hours, with instructions to sign up again.
+      </div>
+
+      <div class="success">
+        <strong>For Valid Links:</strong> Fresh confirmation links will work
+        normally and show the success message with admin approval information.
+      </div>
+
+      <h2>📱 Test URLs:</h2>
+
+      <p><strong>Test Expired Link (what you were seeing):</strong></p>
+      <div class="test-url">
+        https://bakar404.github.io/lsat-tracker/#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired
+      </div>
+
+      <p>
+        <strong
+          >Test Success Link (what you should see with fresh
+          confirmations):</strong
+        >
+      </p>
+      <div class="test-url">
+        https://bakar404.github.io/lsat-tracker/#access_token=example&type=signup&refresh_token=example
+      </div>
+
+      <h2>🚀 Next Steps:</h2>
+      <ol>
+        <li>
+          <strong>Test with Fresh Email:</strong> Register a new test account to
+          get a fresh confirmation link
+        </li>
+        <li>
+          <strong>Admin Setup:</strong> Add the <code>is_admin</code> column to
+          your database
+        </li>
+        <li>
+          <strong>Approve Users:</strong> Use the admin panel to approve test
+          accounts
+        </li>
+        <li>
+          <strong>Full Flow Test:</strong> Registration → Email confirmation →
+          Admin approval → Welcome email
+        </li>
+      </ol>
+
+      <div class="info">
+        <strong>Live App:</strong>
+        <a href="https://bakar404.github.io/lsat-tracker/" target="_blank"
+          >https://bakar404.github.io/lsat-tracker/</a
+        >
+      </div>
+    </div>
+
+    <script>
+      // Auto-detect if we're being viewed from the confirmation callback
+      if (
+        window.location.hash.includes("error=") ||
+        window.location.hash.includes("access_token=")
+      ) {
+        document.body.innerHTML = `
+                <div class="container">
+                    <h1>🔧 Confirmation Link Detected!</h1>
+                    <div class="warning">
+                        <strong>This appears to be an email confirmation link.</strong><br>
+                        You should be redirected to the auth callback page automatically.
+                    </div>
+                    <p>If you're not redirected, <a href="https://bakar404.github.io/lsat-tracker/#/auth-callback${window.location.hash}">click here</a>.</p>
+                </div>
+            `;
+
+        // Redirect to the proper auth callback
+        setTimeout(() => {
+          window.location.href = `https://bakar404.github.io/lsat-tracker/#/auth-callback${window.location.hash}`;
+        }, 2000);
+      }
+    </script>
+  </body>
+</html>
