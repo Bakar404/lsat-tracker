@@ -9,7 +9,8 @@ const META_TABLE = "lsat_meta";
 // where to call the backend
 const DEFAULT_TRANSFORMER =
   import.meta.env.VITE_TRANSFORMER_URL ||
-  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  (window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
     ? "http://localhost:8000/transform"
     : "https://lsat-tracker.onrender.com/transform");
 
@@ -177,9 +178,10 @@ export default function UploadDropdown({ user, onAfterUpload }) {
     if (!examDate.trim()) return alert("Exam Date is required.");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(examDate))
       return alert("Exam Date must be in YYYY-MM-DD format.");
-    if (!selectedFile) return alert("Please select a PDF file.");    try {
+    if (!selectedFile) return alert("Please select a PDF file.");
+    try {
       setBusy(true);
-      
+
       console.log("Current hostname:", window.location.hostname);
       console.log("Uploading to:", DEFAULT_TRANSFORMER);
 
