@@ -48,7 +48,9 @@ export default function LoginPage({ onAuthed }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin },
+      options: { 
+        emailRedirectTo: `${window.location.origin}${window.location.pathname}#/auth-callback`
+      },
     });
 
     setLoading(false);
@@ -56,7 +58,7 @@ export default function LoginPage({ onAuthed }) {
     if (error) return setMessage(error.message);
 
     setMessage(
-      "Check your email to confirm your account. After confirmation, an admin must approve your account."
+      "Registration successful! Please check your email to confirm your account. After email confirmation, an admin must approve your account before you can access the application."
     );
   };
 

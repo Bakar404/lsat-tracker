@@ -35,12 +35,12 @@ export default function TestManager({ user, onTestDeleted }) {
         return acc;
       }, {});
 
-      const testsWithCounts = (meta || []).map(test => ({
+      const testsWithCounts = (meta || []).map((test) => ({
         ...test,
         question_count: questionCounts[test.exam_number] || 0,
         // Mock filename and upload date since we don't store these currently
         filename: `LSAT_Test_${test.exam_number}.pdf`,
-        uploaded_at: test.created_at || new Date().toISOString()
+        uploaded_at: test.created_at || new Date().toISOString(),
       }));
 
       setTests(testsWithCounts);
@@ -53,7 +53,11 @@ export default function TestManager({ user, onTestDeleted }) {
   };
 
   const handleDeleteTest = async (examNumber) => {
-    if (!window.confirm(`Are you sure you want to delete Test ${examNumber}? This will remove all questions and metadata for this test. This action cannot be undone.`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete Test ${examNumber}? This will remove all questions and metadata for this test. This action cannot be undone.`
+      )
+    ) {
       return;
     }
 
@@ -71,7 +75,7 @@ export default function TestManager({ user, onTestDeleted }) {
           .from("lsat_meta")
           .delete()
           .eq("user_id", user.id)
-          .eq("exam_number", examNumber)
+          .eq("exam_number", examNumber),
       ]);
 
       if (rowsError) throw rowsError;
@@ -79,10 +83,10 @@ export default function TestManager({ user, onTestDeleted }) {
 
       // Refresh the tests list
       await loadTests();
-      
+
       // Notify parent component
       onTestDeleted?.(examNumber);
-      
+
       alert(`Test ${examNumber} has been deleted successfully.`);
     } catch (error) {
       console.error("Error deleting test:", error);
@@ -125,21 +129,39 @@ export default function TestManager({ user, onTestDeleted }) {
       {tests.length === 0 ? (
         <div className="p-8 text-center">
           <FileText className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-          <h4 className="text-lg font-medium text-slate-900 mb-2">No tests uploaded</h4>
-          <p className="text-slate-500">Upload your first LSAT test to get started.</p>
+          <h4 className="text-lg font-medium text-slate-900 mb-2">
+            No tests uploaded
+          </h4>
+          <p className="text-slate-500">
+            Upload your first LSAT test to get started.
+          </p>
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-slate-600">Test #</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-slate-600">Test Date</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-slate-600">File Name</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-slate-600">Questions</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-slate-600">Scaled Score</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-slate-600">Date Uploaded</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-slate-600">Actions</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-slate-600">
+                  Test #
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-slate-600">
+                  Test Date
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-slate-600">
+                  File Name
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-slate-600">
+                  Questions
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-slate-600">
+                  Scaled Score
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-slate-600">
+                  Date Uploaded
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-slate-600">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">

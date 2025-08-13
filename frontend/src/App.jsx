@@ -2,10 +2,22 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "./lib/supabase";
 import LoginPage from "./components/LoginPage";
 import Dashboard from "./components/Dashboard";
+import AuthCallback from "./components/AuthCallback";
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [currentRoute, setCurrentRoute] = useState(window.location.hash.slice(1) || "/");
+
+  // Simple hash router
+  useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentRoute(window.location.hash.slice(1) || "/");
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   // Check for existing session on app load
   useEffect(() => {
@@ -29,6 +41,11 @@ export default function App() {
     setUser(null);
   };
 
+  const navigateToLogin = () => {
+    window.location.hash = "/";
+    setCurrentRoute("/");
+  };
+
   // Show loading screen while checking authentication
   if (loading) {
     return (
@@ -39,6 +56,11 @@ export default function App() {
         </div>
       </div>
     );
+  }
+
+  // Handle auth callback route
+  if (currentRoute === "/auth-callback" || currentRoute.startsWith("/auth-callback")) {
+    return <AuthCallback onGoBack={navigateToLogin} />;
   }
 
   // Show login page if not authenticated

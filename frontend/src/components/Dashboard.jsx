@@ -163,6 +163,47 @@ export default function Dashboard({ user, onSignOut }) {
     onSignOut();
   };
 
+  // Show pending approval message if user is not approved
+  if (profile && !profile.approved) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-6">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center w-16 h-16 bg-slate-900 rounded-2xl mx-auto mb-4">
+              <Layers3 className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900">LSAT Tracker</h1>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 text-center">
+            <div className="flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full mx-auto mb-4">
+              <Clock className="w-8 h-8 text-yellow-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-slate-900 mb-4">
+              Account Pending Approval
+            </h2>
+            <p className="text-slate-600 mb-6">
+              Your account is currently pending admin approval. You'll receive an email notification 
+              once your account has been approved and you can start using the LSAT Tracker.
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-blue-800">
+                <strong>Account Status:</strong> Email confirmed, awaiting approval
+              </p>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
@@ -255,12 +296,12 @@ export default function Dashboard({ user, onSignOut }) {
 
         {/* Content Area */}
         {activeTab === "tests" ? (
-          <TestManager 
-            user={user} 
+          <TestManager
+            user={user}
             onTestDeleted={(examNumber) => {
               // Refresh data after test deletion
               window.location.reload();
-            }} 
+            }}
           />
         ) : (
           // Analytics Tab Content
@@ -287,8 +328,8 @@ export default function Dashboard({ user, onSignOut }) {
                       No data yet
                     </h3>
                     <p className="text-slate-500">
-                      Click "Upload Test" in the header to upload your first LSAT
-                      PDF and start tracking your progress.
+                      Click "Upload Test" in the header to upload your first
+                      LSAT PDF and start tracking your progress.
                     </p>
                   </div>
                 )}
@@ -354,7 +395,8 @@ export default function Dashboard({ user, onSignOut }) {
                         {fmtMMSS(
                           joined.rows.length
                             ? joined.rows.reduce(
-                                (s, r) => s + (Number(r.total_time_seconds) || 0),
+                                (s, r) =>
+                                  s + (Number(r.total_time_seconds) || 0),
                                 0
                               ) / joined.rows.length
                             : 0
