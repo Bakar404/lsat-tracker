@@ -9,7 +9,7 @@ const META_TABLE = "lsat_meta";
 // where to call the backend
 const DEFAULT_TRANSFORMER =
   import.meta.env.VITE_TRANSFORMER_URL ||
-  (window.location.hostname === "localhost"
+  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
     ? "http://localhost:8000/transform"
     : "https://lsat-tracker.onrender.com/transform");
 
