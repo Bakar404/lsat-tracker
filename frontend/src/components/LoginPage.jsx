@@ -46,10 +46,11 @@ export default function LoginPage({ onAuthed }) {
     setMessage("");
 
     const getRedirectUrl = () => {
-      if (window.location.hostname === "localhost") {
-        return `${window.location.origin}${window.location.pathname}#/auth-callback`;
-      }
-      return "https://bakar404.github.io/lsat-tracker/#/auth-callback";
+      const baseAwaiting =
+        window.location.hostname === "localhost"
+          ? `${window.location.origin}${window.location.pathname}#/awaiting-approval`
+          : `https://bakar404.github.io/lsat-tracker/#/awaiting-approval`;
+      return baseAwaiting;
     };
 
     const { error } = await supabase.auth.signUp({
@@ -65,7 +66,7 @@ export default function LoginPage({ onAuthed }) {
     if (error) return setMessage(error.message);
 
     setMessage(
-      "Registration successful! Please check your email to confirm your account. After email confirmation, an admin must approve your account before you can access the application."
+      "Registration successful! Please check your email to confirm your account. After email confirmation, you'll see an awaiting approval page until an admin approves you."
     );
   };
 
@@ -192,8 +193,8 @@ export default function LoginPage({ onAuthed }) {
           {message && (
             <div
               className={`mt-4 p-3 rounded-xl text-sm ${
-                message.includes("Check your email") ||
-                message.includes("admin")
+                message.includes("Please check your email") ||
+                message.includes("awaiting approval")
                   ? "bg-green-50 text-green-700 border border-green-200"
                   : "bg-red-50 text-red-700 border border-red-200"
               }`}
@@ -208,7 +209,8 @@ export default function LoginPage({ onAuthed }) {
               {mode === "signup" ? (
                 <>
                   By signing up, you agree to our terms. After email
-                  confirmation, an admin will approve your account.
+                  confirmation, you'll be taken to an awaiting approval page
+                  until an admin approves your account.
                 </>
               ) : (
                 <>
