@@ -8,10 +8,14 @@ import {
   Flag,
   LogOut,
   Filter,
+  Table,
+  FileText,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import UploadDropdown from "./UploadDropdown";
-import FiltersPanel from "./FiltersPanel";
+import FiltersPanelMulti from "./FiltersPanelMulti";
+import DataTable from "./DataTable";
+import TestManager from "./TestManager";
 import KpiCard from "./cards/KpiCard";
 
 import SectionAccuracyChart from "../charts/SectionAccuracyChart";
@@ -29,6 +33,7 @@ import {
 
 export default function Dashboard({ user, onSignOut }) {
   const [profile, setProfile] = useState(null);
+  const [activeTab, setActiveTab] = useState("analytics"); // analytics, data, tests
   const {
     loading,
     joined,
@@ -45,6 +50,7 @@ export default function Dashboard({ user, onSignOut }) {
     dateTo,
     setDateTo,
     uploadPdfAndUpsert,
+    deleteTest,
   } = useData(user);
 
   useEffect(() => {
@@ -190,171 +196,223 @@ export default function Dashboard({ user, onSignOut }) {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Filters Section */}
-        <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-lg">
-              <Filter className="w-5 h-5 text-green-600" />
-            </div>
-            <h2 className="text-lg font-semibold text-slate-900">Filters</h2>
+        {/* Navigation Tabs */}
+        <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 p-2">
+          <div className="flex gap-2">
+            {[
+              { id: "analytics", label: "Analytics", icon: Flag },
+              { id: "data", label: "Data Table", icon: Table },
+              { id: "tests", label: "Manage Tests", icon: FileText },
+            ].map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
+                  activeTab === id
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </button>
+            ))}
           </div>
-          <FiltersPanel
-            rows={joined.rows}
-            examFilter={examFilter}
-            setExamFilter={setExamFilter}
-            sectionFilter={sectionFilter}
-            setSectionFilter={setSectionFilter}
-            flagFilter={flagFilter}
-            setFlagFilter={setFlagFilter}
-            dateFrom={dateFrom}
-            setDateFrom={setDateFrom}
-            dateTo={dateTo}
-            setDateTo={setDateTo}
-            onExport={downloadCSV}
-          />
         </div>
 
-        {/* Empty State */}
-        {loading || !joined.rows.length ? (
-          <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 p-12 text-center">
-            {loading ? (
-              <div className="space-y-4">
-                <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mx-auto"></div>
-                <h3 className="text-lg font-semibold text-slate-900">
-                  Loading your data...
-                </h3>
-                <p className="text-slate-500">
-                  Please wait while we fetch your LSAT progress.
-                </p>
+        {/* Filters Section - Show on analytics and data tabs */}
+        {(activeTab === "analytics" || activeTab === "data") && (
+          <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-lg">
+                <Filter className="w-5 h-5 text-green-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-slate-900">Filters</h2>
+            </div>
+            <FiltersPanelMulti
+              rows={joined.rows.length > 0 ? joined.rows : []}
+              examFilter={examFilter}
+              setExamFilter={setExamFilter}
+              sectionFilter={sectionFilter}
+              setSectionFilter={setSectionFilter}
+              flagFilter={flagFilter}
+              setFlagFilter={setFlagFilter}
+              dateFrom={dateFrom}
+              setDateFrom={setDateFrom}
+              dateTo={dateTo}
+              setDateTo={setDateTo}
+              onExport={downloadCSV}
+            />
+          </div>
+        )}
+
+        {/* Content Area */}
+        {activeTab === "tests" ? (
+          <TestManager 
+            user={user} 
+            onTestDeleted={(examNumber) => {
+              // Refresh data after test deletion
+              window.location.reload();
+            }} 
+          />
+        ) : activeTab === "data" ? (
+          <DataTable 
+            data={joined.rows} 
+            onDeleteTest={async (examNumber) => {
+              try {
+                await deleteTest(examNumber);
+                alert(`Test ${examNumber} has been deleted successfully.`);
+              } catch (error) {
+                alert("Failed to delete test");
+              }
+            }}
+          />
+        ) : (
+          // Analytics Tab Content
+          <>
+            {/* Empty State */}
+            {loading || !joined.rows.length ? (
+              <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 p-12 text-center">
+                {loading ? (
+                  <div className="space-y-4">
+                    <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mx-auto"></div>
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      Loading your data...
+                    </h3>
+                    <p className="text-slate-500">
+                      Please wait while we fetch your LSAT progress.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto">
+                      <Database className="w-8 h-8 text-slate-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      No data yet
+                    </h3>
+                    <p className="text-slate-500">
+                      Click "Upload Test" in the header to upload your first LSAT
+                      PDF and start tracking your progress.
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto">
-                  <Database className="w-8 h-8 text-slate-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900">
-                  No data yet
-                </h3>
-                <p className="text-slate-500">
-                  Click "Upload Test" in the header to upload your first LSAT
-                  PDF and start tracking your progress.
-                </p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <>
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 flex items-center gap-4">
-                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-xl">
-                  <Database className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Questions</p>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {joined.rows.length}
-                  </p>
-                </div>
-              </div>
+              <>
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                  <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 flex items-center gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-xl">
+                      <Database className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Questions</p>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {joined.rows.length}
+                      </p>
+                    </div>
+                  </div>
 
-              <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 flex items-center gap-4">
-                <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-xl">
-                  <CheckCircle2 className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Correct</p>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {joined.rows.reduce(
-                      (s, r) => s + (r.question_score ? 1 : 0),
-                      0
-                    )}
-                  </p>
-                </div>
-              </div>
+                  <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 flex items-center gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-xl">
+                      <CheckCircle2 className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Correct</p>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {joined.rows.reduce(
+                          (s, r) => s + (r.question_score ? 1 : 0),
+                          0
+                        )}
+                      </p>
+                    </div>
+                  </div>
 
-              <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 flex items-center gap-4">
-                <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-xl">
-                  <XCircle className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Accuracy</p>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {Math.round(
-                      (joined.rows.reduce(
-                        (s, r) => s + (r.question_score ? 1 : 0),
-                        0
-                      ) /
-                        (joined.rows.length || 1)) *
-                        100
-                    )}
-                    %
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 flex items-center gap-4">
-                <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-xl">
-                  <Clock className="w-6 h-6 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Avg Time</p>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {fmtMMSS(
-                      joined.rows.length
-                        ? joined.rows.reduce(
-                            (s, r) => s + (Number(r.total_time_seconds) || 0),
+                  <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 flex items-center gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-xl">
+                      <XCircle className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Accuracy</p>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {Math.round(
+                          (joined.rows.reduce(
+                            (s, r) => s + (r.question_score ? 1 : 0),
                             0
-                          ) / joined.rows.length
-                        : 0
-                    )}
-                  </p>
-                </div>
-              </div>
+                          ) /
+                            (joined.rows.length || 1)) *
+                            100
+                        )}
+                        %
+                      </p>
+                    </div>
+                  </div>
 
-              <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 flex items-center gap-4">
-                <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-xl">
-                  <Flag className="w-6 h-6 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Flagged</p>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {joined.rows.filter((r) => r.flagged).length}
-                  </p>
-                </div>
-              </div>
-            </div>
+                  <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 flex items-center gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-xl">
+                      <Clock className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Avg Time</p>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {fmtMMSS(
+                          joined.rows.length
+                            ? joined.rows.reduce(
+                                (s, r) => s + (Number(r.total_time_seconds) || 0),
+                                0
+                              ) / joined.rows.length
+                            : 0
+                        )}
+                      </p>
+                    </div>
+                  </div>
 
-            {/* Charts Grid */}
-            <div className="space-y-8">
-              {/* Row 1 */}
-              <div className="grid lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 overflow-hidden">
-                  <SectionAccuracyChart data={bySectionType} />
+                  <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 flex items-center gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-xl">
+                      <Flag className="w-6 h-6 text-red-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Flagged</p>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {joined.rows.filter((r) => r.flagged).length}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 overflow-hidden">
-                  <TrendChart data={trendByExam} />
-                </div>
-              </div>
 
-              {/* Row 2 */}
-              <div className="grid lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 overflow-hidden">
-                  <SubtypeBar data={bySubtype} />
-                </div>
-                <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 overflow-hidden">
-                  <FlaggedPie
-                    flagged={joined.rows.filter((r) => r.flagged).length}
-                    unflagged={joined.rows.filter((r) => !r.flagged).length}
-                  />
-                </div>
-              </div>
+                {/* Charts Grid */}
+                <div className="space-y-8">
+                  {/* Row 1 */}
+                  <div className="grid lg:grid-cols-2 gap-6">
+                    <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 overflow-hidden">
+                      <SectionAccuracyChart data={bySectionType} />
+                    </div>
+                    <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 overflow-hidden">
+                      <TrendChart data={trendByExam} />
+                    </div>
+                  </div>
 
-              {/* Row 3 */}
-              <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 overflow-hidden">
-                <AvgTimeBar data={bySubtype} fmt={fmtMMSS} />
-              </div>
-            </div>
+                  {/* Row 2 */}
+                  <div className="grid lg:grid-cols-2 gap-6">
+                    <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 overflow-hidden">
+                      <SubtypeBar data={bySubtype} />
+                    </div>
+                    <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 overflow-hidden">
+                      <FlaggedPie
+                        flagged={joined.rows.filter((r) => r.flagged).length}
+                        unflagged={joined.rows.filter((r) => !r.flagged).length}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 3 */}
+                  <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 overflow-hidden">
+                    <AvgTimeBar data={bySubtype} fmt={fmtMMSS} />
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
