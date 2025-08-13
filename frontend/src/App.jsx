@@ -3,6 +3,7 @@ import { supabase } from "./lib/supabase";
 import LoginPage from "./components/LoginPage";
 import Dashboard from "./components/Dashboard";
 import AuthCallback from "./components/AuthCallback";
+import AwaitingApproval from "./components/AwaitingApproval";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -58,6 +59,11 @@ export default function App() {
         </div>
       </div>
     );
+  }
+
+  // New awaiting approval route (stand-alone page after email confirm)
+  if (currentRoute === "/awaiting-approval") {
+    return <AwaitingApproval onGoToLogin={navigateToLogin} />;
   }
 
   // Handle auth callback route
