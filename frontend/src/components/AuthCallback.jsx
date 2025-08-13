@@ -10,7 +10,9 @@ export default function AuthCallback({ onGoBack }) {
     const handleAuthCallback = async () => {
       try {
         // Get the hash fragment from the URL
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const hashParams = new URLSearchParams(
+          window.location.hash.substring(1)
+        );
         const accessToken = hashParams.get("access_token");
         const refreshToken = hashParams.get("refresh_token");
         const type = hashParams.get("type");
@@ -18,21 +20,25 @@ export default function AuthCallback({ onGoBack }) {
         if (type === "signup" && accessToken) {
           // Email confirmation successful
           setStatus("success");
-          setMessage("Email confirmed successfully! Your account is now verified, but requires admin approval before you can access the application.");
-          
+          setMessage(
+            "Email confirmed successfully! Your account is now verified, but requires admin approval before you can access the application."
+          );
+
           // Clear the hash from URL
           window.history.replaceState(null, null, window.location.pathname);
         } else if (type === "recovery" && accessToken) {
           // Password recovery
           setStatus("success");
-          setMessage("Password reset confirmed! You can now sign in with your new password.");
-          
+          setMessage(
+            "Password reset confirmed! You can now sign in with your new password."
+          );
+
           // Clear the hash from URL
           window.history.replaceState(null, null, window.location.pathname);
         } else {
           // Try to handle the session
           const { data, error } = await supabase.auth.getSession();
-          
+
           if (error) {
             setStatus("error");
             setMessage(`Authentication error: ${error.message}`);
@@ -41,7 +47,9 @@ export default function AuthCallback({ onGoBack }) {
             setMessage("Authentication successful!");
           } else {
             setStatus("error");
-            setMessage("No valid authentication found. Please try signing in again.");
+            setMessage(
+              "No valid authentication found. Please try signing in again."
+            );
           }
         }
       } catch (error) {
@@ -88,14 +96,13 @@ export default function AuthCallback({ onGoBack }) {
               <h2 className="text-xl font-semibold text-slate-900 mb-4">
                 Email Confirmed!
               </h2>
-              <p className="text-slate-600 mb-6">
-                {message}
-              </p>
+              <p className="text-slate-600 mb-6">{message}</p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <p className="text-sm text-blue-800">
-                  <strong>Next Steps:</strong> Your account is awaiting admin approval. 
-                  You'll receive an email notification once your account has been approved 
-                  and you can start using the LSAT Tracker.
+                  <strong>Next Steps:</strong> Your account is awaiting admin
+                  approval. You'll receive an email notification once your
+                  account has been approved and you can start using the LSAT
+                  Tracker.
                 </p>
               </div>
               <button
@@ -116,9 +123,7 @@ export default function AuthCallback({ onGoBack }) {
               <h2 className="text-xl font-semibold text-slate-900 mb-4">
                 Confirmation Failed
               </h2>
-              <p className="text-slate-600 mb-6">
-                {message}
-              </p>
+              <p className="text-slate-600 mb-6">{message}</p>
               <button
                 onClick={onGoBack}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors"
