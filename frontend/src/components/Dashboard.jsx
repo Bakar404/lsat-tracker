@@ -183,12 +183,14 @@ export default function Dashboard({ user, onSignOut }) {
               Account Pending Approval
             </h2>
             <p className="text-slate-600 mb-6">
-              Your account is currently pending admin approval. You'll receive an email notification 
-              once your account has been approved and you can start using the LSAT Tracker.
+              Your account is currently pending admin approval. You'll receive
+              an email notification once your account has been approved and you
+              can start using the LSAT Tracker.
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <p className="text-sm text-blue-800">
-                <strong>Account Status:</strong> Email confirmed, awaiting approval
+                <strong>Account Status:</strong> Email confirmed, awaiting
+                approval
               </p>
             </div>
             <button
