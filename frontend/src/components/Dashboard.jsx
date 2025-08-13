@@ -351,29 +351,8 @@ export default function Dashboard({ user, onSignOut }) {
               </div>
 
               {/* Row 3 */}
-              <div className="grid lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 overflow-hidden">
-                  <AvgTimeBar data={bySubtype} fmt={fmtMMSS} />
-                </div>
-                <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 p-8">
-                  <h3 className="text-xl font-semibold text-slate-900 mb-4">
-                    How it works
-                  </h3>
-                  <ul className="space-y-3 text-slate-600">
-                    <li className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-slate-400 rounded-full mt-2 flex-shrink-0"></div>
-                      <span>Sign up with email + password → confirm email</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-slate-400 rounded-full mt-2 flex-shrink-0"></div>
-                      <span>Admin approves your account for security</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-slate-400 rounded-full mt-2 flex-shrink-0"></div>
-                      <span>Upload PDFs to track your LSAT progress</span>
-                    </li>
-                  </ul>
-                </div>
+              <div className="bg-white rounded-3xl shadow-lg border border-slate-200/50 overflow-hidden">
+                <AvgTimeBar data={bySubtype} fmt={fmtMMSS} />
               </div>
             </div>
           </>
