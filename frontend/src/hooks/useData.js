@@ -201,23 +201,26 @@ export function useData(user) {
     // Apply multiple exam filter
     if (examFilter.length > 0)
       out = out.filter((r) => examFilter.includes(String(r.exam_number)));
-    
-    // Apply multiple section filter  
+
+    // Apply multiple section filter
     if (sectionFilter.length > 0)
       out = out.filter((r) => sectionFilter.includes(r.section));
-    
-    // Apply multiple section type filter  
+
+    // Apply multiple section type filter
     if (sectionTypeFilter.length > 0)
       out = out.filter((r) => sectionTypeFilter.includes(r.section_type));
-    
+
     // Apply multiple subtype filter
     if (subtypeFilter.length > 0)
       out = out.filter((r) => subtypeFilter.includes(r.subtype));
-    
+
     // Apply multiple flagged filter
     if (flagFilter.length > 0) {
       out = out.filter((r) => {
-        if (flagFilter.includes("Flagged") && flagFilter.includes("Not Flagged")) {
+        if (
+          flagFilter.includes("Flagged") &&
+          flagFilter.includes("Not Flagged")
+        ) {
           return true; // Show all if both are selected
         }
         if (flagFilter.includes("Flagged")) {
@@ -412,10 +415,10 @@ export function useData(user) {
 
   async function deleteTest(examNumber) {
     if (!user) return;
-    
+
     try {
       setLoading(true);
-      
+
       // Delete from both tables
       const [{ error: rowsError }, { error: metaError }] = await Promise.all([
         supabase
@@ -427,7 +430,7 @@ export function useData(user) {
           .from(TABLES.meta)
           .delete()
           .eq("user_id", user.id)
-          .eq("exam_number", examNumber)
+          .eq("exam_number", examNumber),
       ]);
 
       if (rowsError) throw rowsError;
@@ -435,22 +438,27 @@ export function useData(user) {
 
       // Refresh data
       const [{ data: rowsAfter }, { data: metaAfter }] = await Promise.all([
-        supabase.from(TABLES.rows).select("*").eq("user_id", user.id)
+        supabase
+          .from(TABLES.rows)
+          .select("*")
+          .eq("user_id", user.id)
           .order("exam_number", { ascending: true })
           .order("section", { ascending: true })
           .order("question", { ascending: true }),
-        supabase.from(TABLES.meta).select("*").eq("user_id", user.id)
+        supabase
+          .from(TABLES.meta)
+          .select("*")
+          .eq("user_id", user.id)
           .order("exam_number", { ascending: true }),
       ]);
-      
+
       setRawRows(rowsAfter || []);
       setMetaRows(metaAfter || []);
-      
+
       // Remove deleted exam from filters if it was selected
       if (examFilter.includes(String(examNumber))) {
-        setExamFilter(examFilter.filter(e => e !== String(examNumber)));
+        setExamFilter(examFilter.filter((e) => e !== String(examNumber)));
       }
-      
     } catch (error) {
       console.error("Error deleting test:", error);
       throw error;

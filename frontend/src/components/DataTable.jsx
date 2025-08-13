@@ -11,13 +11,18 @@ export default function DataTable({ data }) {
     const sorted = [...data].sort((a, b) => {
       let aVal = a[sortField];
       let bVal = b[sortField];
-      
+
       // Handle numeric sorting for certain fields
-      if (sortField === "exam_number" || sortField === "question" || sortField === "difficulty" || sortField === "total_time_seconds") {
+      if (
+        sortField === "exam_number" ||
+        sortField === "question" ||
+        sortField === "difficulty" ||
+        sortField === "total_time_seconds"
+      ) {
         aVal = Number(aVal) || 0;
         bVal = Number(bVal) || 0;
       }
-      
+
       if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
       if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
       return 0;
@@ -43,16 +48,19 @@ export default function DataTable({ data }) {
   };
 
   const SortIcon = ({ field }) => {
-    if (sortField !== field) return <ChevronDown className="w-4 h-4 text-gray-400" />;
-    return sortDirection === "asc" ? 
-      <ChevronUp className="w-4 h-4 text-slate-600" /> : 
-      <ChevronDown className="w-4 h-4 text-slate-600" />;
+    if (sortField !== field)
+      return <ChevronDown className="w-4 h-4 text-gray-400" />;
+    return sortDirection === "asc" ? (
+      <ChevronUp className="w-4 h-4 text-slate-600" />
+    ) : (
+      <ChevronDown className="w-4 h-4 text-slate-600" />
+    );
   };
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   if (!data || data.length === 0) {
@@ -77,7 +85,7 @@ export default function DataTable({ data }) {
           {sortedData.length} questions • Click column headers to sort
         </p>
       </div>
-      
+
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-slate-200">
           <thead className="bg-slate-50">
@@ -110,24 +118,44 @@ export default function DataTable({ data }) {
           </thead>
           <tbody className="bg-white">
             {paginatedData.map((row, index) => (
-              <tr 
-                key={`${row.exam_number}-${row.section}-${row.question}`} 
+              <tr
+                key={`${row.exam_number}-${row.section}-${row.question}`}
                 className={`hover:bg-blue-50 transition-colors border-b border-slate-200 ${
-                  index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
+                  index % 2 === 0 ? "bg-white" : "bg-slate-50"
                 }`}
               >
-                <td className="px-4 py-3 text-sm font-medium text-slate-900 border-r border-slate-200">{row.exam_number}</td>
-                <td className="px-4 py-3 text-sm text-slate-600 border-r border-slate-200">{row.exam_date}</td>
-                <td className="px-4 py-3 text-sm text-slate-600 border-r border-slate-200">{row.section}</td>
-                <td className="px-4 py-3 text-sm text-slate-600 border-r border-slate-200">{row.question}</td>
-                <td className="px-4 py-3 text-sm text-slate-600 border-r border-slate-200">{row.section_type}</td>
-                <td className="px-4 py-3 text-sm text-slate-600 border-r border-slate-200">{row.subtype}</td>
-                <td className="px-4 py-3 text-sm text-slate-600 border-r border-slate-200">{row.difficulty || "-"}</td>
-                <td className="px-4 py-3 text-sm text-slate-600 border-r border-slate-200">{formatTime(row.total_time_seconds)}</td>
+                <td className="px-4 py-3 text-sm font-medium text-slate-900 border-r border-slate-200">
+                  {row.exam_number}
+                </td>
+                <td className="px-4 py-3 text-sm text-slate-600 border-r border-slate-200">
+                  {row.exam_date}
+                </td>
+                <td className="px-4 py-3 text-sm text-slate-600 border-r border-slate-200">
+                  {row.section}
+                </td>
+                <td className="px-4 py-3 text-sm text-slate-600 border-r border-slate-200">
+                  {row.question}
+                </td>
+                <td className="px-4 py-3 text-sm text-slate-600 border-r border-slate-200">
+                  {row.section_type}
+                </td>
+                <td className="px-4 py-3 text-sm text-slate-600 border-r border-slate-200">
+                  {row.subtype}
+                </td>
+                <td className="px-4 py-3 text-sm text-slate-600 border-r border-slate-200">
+                  {row.difficulty || "-"}
+                </td>
+                <td className="px-4 py-3 text-sm text-slate-600 border-r border-slate-200">
+                  {formatTime(row.total_time_seconds)}
+                </td>
                 <td className="px-4 py-3 text-sm border-r border-slate-200">
-                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                    row.question_score ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                  }`}>
+                  <span
+                    className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                      row.question_score
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
                     {row.question_score ? "Correct" : "Incorrect"}
                   </span>
                 </td>
@@ -140,7 +168,9 @@ export default function DataTable({ data }) {
                     <span className="text-slate-400">No</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-sm text-slate-600">{row.scaled_score || "-"}</td>
+                <td className="px-4 py-3 text-sm text-slate-600">
+                  {row.scaled_score || "-"}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -151,7 +181,9 @@ export default function DataTable({ data }) {
       {totalPages > 1 && (
         <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
           <div className="text-sm text-slate-600">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, sortedData.length)} of {sortedData.length} results
+            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+            {Math.min(currentPage * itemsPerPage, sortedData.length)} of{" "}
+            {sortedData.length} results
           </div>
           <div className="flex gap-2">
             <button
@@ -165,7 +197,9 @@ export default function DataTable({ data }) {
               Page {currentPage} of {totalPages}
             </span>
             <button
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              onClick={() =>
+                setCurrentPage(Math.min(totalPages, currentPage + 1))
+              }
               disabled={currentPage === totalPages}
               className="px-3 py-1 text-sm rounded-lg border border-slate-300 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
