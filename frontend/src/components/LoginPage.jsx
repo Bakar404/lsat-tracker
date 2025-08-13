@@ -45,11 +45,18 @@ export default function LoginPage({ onAuthed }) {
     setLoading(true);
     setMessage("");
 
+    const getRedirectUrl = () => {
+      if (window.location.hostname === "localhost") {
+        return `${window.location.origin}${window.location.pathname}#/auth-callback`;
+      }
+      return "https://bakar404.github.io/lsat-tracker/#/auth-callback";
+    };
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { 
-        emailRedirectTo: `${window.location.origin}${window.location.pathname}#/auth-callback`
+      options: {
+        emailRedirectTo: getRedirectUrl(),
       },
     });
 

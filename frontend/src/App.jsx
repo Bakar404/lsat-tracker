@@ -7,7 +7,9 @@ import AuthCallback from "./components/AuthCallback";
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [currentRoute, setCurrentRoute] = useState(window.location.hash.slice(1) || "/");
+  const [currentRoute, setCurrentRoute] = useState(
+    window.location.hash.slice(1) || "/"
+  );
 
   // Simple hash router
   useEffect(() => {
@@ -59,7 +61,10 @@ export default function App() {
   }
 
   // Handle auth callback route
-  if (currentRoute === "/auth-callback" || currentRoute.startsWith("/auth-callback")) {
+  if (
+    currentRoute === "/auth-callback" ||
+    currentRoute.startsWith("/auth-callback")
+  ) {
     return <AuthCallback onGoBack={navigateToLogin} />;
   }
 
