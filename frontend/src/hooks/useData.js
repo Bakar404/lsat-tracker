@@ -148,9 +148,9 @@ export function useData(user) {
   const [metaRows, setMetaRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // filters
-  const [examFilter, setExamFilter] = useState("all");
-  const [sectionFilter, setSectionFilter] = useState("all");
+  // Updated filters to support multiple selections
+  const [examFilter, setExamFilter] = useState([]);
+  const [sectionFilter, setSectionFilter] = useState([]);
   const [flagFilter, setFlagFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -196,10 +196,15 @@ export function useData(user) {
       scaled_score: metaByExam.get(String(r.exam_number))?.scaled_score ?? null,
     }));
 
-    if (examFilter !== "all")
-      out = out.filter((r) => String(r.exam_number) === String(examFilter));
-    if (sectionFilter !== "all")
-      out = out.filter((r) => r.section_type === sectionFilter);
+    // Apply multiple exam filter
+    if (examFilter.length > 0)
+      out = out.filter((r) => examFilter.includes(String(r.exam_number)));
+    
+    // Apply multiple section type filter  
+    if (sectionFilter.length > 0)
+      out = out.filter((r) => sectionFilter.includes(r.section_type));
+    
+    // Apply flagged filter (keep as single selection)
     if (flagFilter === "flagged") out = out.filter((r) => !!r.flagged);
     if (flagFilter === "unflagged") out = out.filter((r) => !r.flagged);
 
@@ -381,6 +386,55 @@ export function useData(user) {
     setMetaRows(metaAfter || []);
   }
 
+  async function deleteTest(examNumber) {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      
+      // Delete from both tables
+      const [{ error: rowsError }, { error: metaError }] = await Promise.all([
+        supabase
+          .from(TABLES.rows)
+          .delete()
+          .eq("user_id", user.id)
+          .eq("exam_number", examNumber),
+        supabase
+          .from(TABLES.meta)
+          .delete()
+          .eq("user_id", user.id)
+          .eq("exam_number", examNumber)
+      ]);
+
+      if (rowsError) throw rowsError;
+      if (metaError) throw metaError;
+
+      // Refresh data
+      const [{ data: rowsAfter }, { data: metaAfter }] = await Promise.all([
+        supabase.from(TABLES.rows).select("*").eq("user_id", user.id)
+          .order("exam_number", { ascending: true })
+          .order("section", { ascending: true })
+          .order("question", { ascending: true }),
+        supabase.from(TABLES.meta).select("*").eq("user_id", user.id)
+          .order("exam_number", { ascending: true }),
+      ]);
+      
+      setRawRows(rowsAfter || []);
+      setMetaRows(metaAfter || []);
+      
+      // Remove deleted exam from filters if it was selected
+      if (examFilter.includes(String(examNumber))) {
+        setExamFilter(examFilter.filter(e => e !== String(examNumber)));
+      }
+      
+    } catch (error) {
+      console.error("Error deleting test:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return {
     loading,
     joined,
@@ -397,5 +451,6 @@ export function useData(user) {
     dateTo,
     setDateTo,
     uploadPdfAndUpsert,
+    deleteTest,
   };
 }
