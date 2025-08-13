@@ -28,13 +28,15 @@ export default function AwaitingApproval({ onGoToLogin }) {
 
   useEffect(() => {
     const parseHashForErrors = () => {
-      const raw = window.location.hash.substring(1); // remove leading '#'
-      const params = new URLSearchParams(raw);
+      const rawHash = window.location.hash; // includes leading '#'
+      const raw = rawHash.startsWith('#') ? rawHash.substring(1) : rawHash;
+      const params = new URLSearchParams(raw.includes('?') ? raw.split('?')[1] : raw);
       const error = params.get("error");
       if (error) {
-        // Re-route to the existing callback page which already surfaces
-        // detailed / user-friendly error messaging (expired links, etc.).
-        window.location.hash = "/auth-callback" + window.location.hash.slice(1);
+        // Preserve only the query portion (?error=...&error_code=...) when forwarding
+        const queryIndex = rawHash.indexOf('?');
+        const query = queryIndex !== -1 ? rawHash.slice(queryIndex) : '';
+        window.location.hash = "/auth-callback" + query; // -> #/auth-callback?error=...
         return true;
       }
       return false;
