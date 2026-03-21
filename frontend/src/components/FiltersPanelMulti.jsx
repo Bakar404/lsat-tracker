@@ -50,7 +50,7 @@ const MultiSelectDropdown = ({
       </label>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 py-2 text-sm border border-slate-300 rounded-lg hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+        className="w-full flex items-center justify-between px-3 py-2 text-sm border border-slate-300 rounded-lg hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white transition-all"
       >
         <span className="text-slate-700">
           {selectedValues.length === 0
@@ -77,7 +77,7 @@ const MultiSelectDropdown = ({
                 if (input) input.indeterminate = someSelected;
               }}
               onChange={toggleAll}
-              className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+              className="w-4 h-4 text-slate-900 border-slate-300 rounded focus:ring-slate-500"
             />
             <span className="ml-2 text-sm font-medium text-slate-700">
               {allSelected ? "Deselect All" : "Select All"}
@@ -94,11 +94,11 @@ const MultiSelectDropdown = ({
                 type="checkbox"
                 checked={selectedValues.includes(option)}
                 onChange={() => toggleOption(option)}
-                className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-slate-900 border-slate-300 rounded focus:ring-slate-500"
               />
               <span className="ml-2 text-sm text-slate-700">{option}</span>
               {selectedValues.includes(option) && (
-                <Check className="w-4 h-4 ml-auto text-blue-600" />
+                <Check className="w-4 h-4 ml-auto text-slate-900" />
               )}
             </label>
           ))}
@@ -180,7 +180,7 @@ export default function FiltersPanelMulti({
         {hasActiveFilters && (
           <button
             onClick={clearAllFilters}
-            className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+            className="text-sm text-slate-600 hover:text-slate-900 hover:underline font-medium"
           >
             Clear All
           </button>
