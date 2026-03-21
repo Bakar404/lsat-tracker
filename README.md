@@ -2,11 +2,27 @@
 
 A modern, responsive dashboard for LSAT exam analysis. Upload PDF exam papers, automatically extract question data, and visualize your performance across sections and question types.
 
+---
+
+## ⚠️ Current Status: Supabase Project Paused
+
+The backend Supabase project has been paused (inactive for 90+ days). The app code is safe on GitHub, but the database is inaccessible.
+
+**👉 [See RECOVERY.md for step-by-step recovery instructions](RECOVERY.md)**
+
+**Quick summary:**
+1. Download backup from Supabase
+2. Create new Supabase project
+3. Update environment variables
+4. Redeploy
+
+---
+
 ## 🚀 Live Application
 
 **[Open LSAT Tracker →](https://Bakar404.github.io/lsat-tracker/)**
 
-Hosted on GitHub Pages. Sign in to access your dashboard and track progress over time.
+Hosted on GitHub Pages. *Note: Currently requires Supabase project recovery to function.*
 
 ---
 
