@@ -10,7 +10,9 @@ export const toNum = (v, d = 0) => {
 };
 
 export const toBool = (v) => {
-  const s = String(v || "").trim().toLowerCase();
+  const s = String(v || "")
+    .trim()
+    .toLowerCase();
   return s === "true" || s === "1" || s === "yes" || s === "y";
 };
 
@@ -83,7 +85,7 @@ export function parseCSV(text) {
   return rows
     .slice(1)
     .map((r) =>
-      Object.fromEntries(header.map((h, idx) => [h, (r[idx] ?? "").trim()]))
+      Object.fromEntries(header.map((h, idx) => [h, (r[idx] ?? "").trim()])),
     );
 }
 
@@ -103,7 +105,7 @@ export const headerMap = (obj) => {
     else if (/^(difficulty|level)$/.test(key)) map[k] = "difficulty";
     else if (
       /^(totaltime|totaltimeinseconds|totaltimeseconds|totaltime_seconds|totaltimesecond|totalseconds|timeinseconds)$/.test(
-        key
+        key,
       )
     )
       map[k] = "total_time_seconds";

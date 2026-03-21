@@ -84,7 +84,7 @@ export default function Dashboard({ user, onSignOut }) {
       const attempted = subset.length || 0;
       const correct = subset.reduce(
         (s, r) => s + (r.question_score ? 1 : 0),
-        0
+        0,
       );
       const accuracy = attempted ? Math.round((100 * correct) / attempted) : 0;
       return { section_type: st, attempted, correct, accuracy };
@@ -93,7 +93,7 @@ export default function Dashboard({ user, onSignOut }) {
 
   const bySubtype = useMemo(() => {
     const targetSubtypes = Array.from(
-      new Set([...LOGICAL_REASONING_SUBTYPES, ...READING_COMP_SUBTYPES])
+      new Set([...LOGICAL_REASONING_SUBTYPES, ...READING_COMP_SUBTYPES]),
     );
     const map = new Map();
     for (const t of targetSubtypes)
@@ -114,8 +114,8 @@ export default function Dashboard({ user, onSignOut }) {
       section_type: LOGICAL_REASONING_SUBTYPES.includes(o.subtype)
         ? "Logical Reasoning"
         : READING_COMP_SUBTYPES.includes(o.subtype)
-        ? "Reading Comprehension"
-        : "Unknown",
+          ? "Reading Comprehension"
+          : "Unknown",
     }));
     out.sort((a, b) => a.accuracy - b.accuracy || b.attempted - a.attempted);
     return out;
@@ -144,9 +144,9 @@ export default function Dashboard({ user, onSignOut }) {
           .map((v) =>
             typeof v === "string" && v.includes(",")
               ? `"${v.replaceAll('"', '""')}"`
-              : v
+              : v,
           )
-          .join(",")
+          .join(","),
       );
     }
     const blob = new Blob([lines.join("\n")], {
@@ -368,7 +368,7 @@ export default function Dashboard({ user, onSignOut }) {
                       <p className="text-2xl font-bold text-slate-900">
                         {joined.rows.reduce(
                           (s, r) => s + (r.question_score ? 1 : 0),
-                          0
+                          0,
                         )}
                       </p>
                     </div>
@@ -384,10 +384,10 @@ export default function Dashboard({ user, onSignOut }) {
                         {Math.round(
                           (joined.rows.reduce(
                             (s, r) => s + (r.question_score ? 1 : 0),
-                            0
+                            0,
                           ) /
                             (joined.rows.length || 1)) *
-                            100
+                            100,
                         )}
                         %
                       </p>
@@ -406,9 +406,9 @@ export default function Dashboard({ user, onSignOut }) {
                             ? joined.rows.reduce(
                                 (s, r) =>
                                   s + (Number(r.total_time_seconds) || 0),
-                                0
+                                0,
                               ) / joined.rows.length
-                            : 0
+                            : 0,
                         )}
                       </p>
                     </div>

@@ -56,8 +56,8 @@ const MultiSelectDropdown = ({
           {selectedValues.length === 0
             ? placeholder
             : selectedValues.length === options.length
-            ? "All selected"
-            : `${selectedValues.length} selected`}
+              ? "All selected"
+              : `${selectedValues.length} selected`}
         </span>
         <ChevronDown
           className={`w-4 h-4 text-slate-500 transition-transform ${
@@ -134,7 +134,7 @@ export default function FiltersPanelMulti({
       return Number.isFinite(numA) && Number.isFinite(numB)
         ? numA - numB
         : a.localeCompare(b);
-    }
+    },
   );
 
   const sectionOptions = [...new Set(rows.map((r) => r.section))]
