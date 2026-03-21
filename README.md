@@ -8,13 +8,14 @@ A modern, responsive dashboard for LSAT exam analysis. Upload PDF exam papers, a
 
 The backend Supabase project has been paused (inactive for 90+ days). The app code is safe on GitHub, but the database is inaccessible.
 
-**👉 [See RECOVERY.md for step-by-step recovery instructions](RECOVERY.md)**
+**👉 [See QUICK_RECOVERY.md for fast step-by-step recovery!](QUICK_RECOVERY.md)**
 
-**Quick summary:**
-1. Download backup from Supabase
-2. Create new Supabase project
-3. Update environment variables
-4. Redeploy
+**tl;dr:**
+1. Create new Supabase project (5 min)
+2. Copy credentials to `.env.local` (2 min)
+3. Run database SQL setup (3 min)
+4. Deploy: `git push` (3 min)
+5. Done! ✅
 
 ---
 
