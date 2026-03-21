@@ -3,7 +3,8 @@
  */
 
 export const BUTTON_STYLES = {
-  primary: "bg-slate-900 hover:bg-slate-800 active:scale-95 text-white shadow-lg",
+  primary:
+    "bg-slate-900 hover:bg-slate-800 active:scale-95 text-white shadow-lg",
   secondary: "bg-slate-100 hover:bg-slate-200 text-slate-900",
   danger: "bg-red-100 hover:bg-red-200 text-red-900",
   success: "bg-emerald-100 hover:bg-emerald-200 text-emerald-900",
@@ -22,9 +23,12 @@ export const CARD_STYLES = {
 };
 
 export const BADGE_STYLES = {
-  success: "inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded-full",
-  error: "inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full",
-  warning: "inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full",
+  success:
+    "inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded-full",
+  error:
+    "inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full",
+  warning:
+    "inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full",
   info: "inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full",
 };
 

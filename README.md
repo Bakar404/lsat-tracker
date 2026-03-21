@@ -13,27 +13,34 @@ Hosted on GitHub Pages. Sign in to access your dashboard and track progress over
 ## ⚙️ Development Setup
 
 ### Frontend
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+
 Runs on `http://localhost:5173`
 
 ### Backend
+
 ```bash
 cd backend
 pip install -r requirements.txt
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
+
 Runs on `http://127.0.0.1:8000`
 
 ### Expose Backend Publicly (Development)
+
 Use Cloudflare Tunnel for local testing:
+
 ```bash
 brew install cloudflare/cloudflare/cloudflared
 cloudflared tunnel --url http://localhost:8000
 ```
+
 Copy the generated URL into the app's Transformer URL setting.
 
 ---
@@ -80,12 +87,14 @@ lsat-tracker/
 ## 🔐 First-Time Setup
 
 1. **Database**: Run in [Supabase SQL Editor](https://supabase.com/dashboard):
+
 ```sql
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
 UPDATE profiles SET is_admin = TRUE WHERE id = 'YOUR_USER_ID';
 ```
 
 2. **(Optional) Email Notifications**: Get a Resend API key and run:
+
 ```bash
 supabase secrets set RESEND_API_KEY="your_key_here"
 ```

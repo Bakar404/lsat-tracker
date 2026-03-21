@@ -88,7 +88,7 @@ export default function UploadDropdown({ user, onAfterUpload }) {
           detail = (await res.clone().json())?.detail;
         } catch {}
         throw new Error(
-          detail || `Backend error ${res.status}: ${res.statusText}`
+          detail || `Backend error ${res.status}: ${res.statusText}`,
         );
       }
 
@@ -123,7 +123,7 @@ export default function UploadDropdown({ user, onAfterUpload }) {
               : Number(String(r.difficulty).replace(/[^0-9-]/g, "")),
           total_time_seconds: toNum(
             r.total_time_seconds ?? r.total_time ?? r.time_seconds ?? r.seconds,
-            0
+            0,
           ),
           question_score: toNum(r.question_score, 0),
           flagged: toBool(r.flagged),
@@ -159,7 +159,7 @@ export default function UploadDropdown({ user, onAfterUpload }) {
         .from(META_TABLE)
         .upsert(
           { user_id: user.id, ...metaRow },
-          { onConflict: "user_id,exam_number" }
+          { onConflict: "user_id,exam_number" },
         );
       if (upMetaErr) throw upMetaErr;
 
