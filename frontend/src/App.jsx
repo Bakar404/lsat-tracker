@@ -10,7 +10,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentRoute, setCurrentRoute] = useState(
-    window.location.hash.slice(1) || "/"
+    window.location.hash.slice(1) || "/",
   );
   const [error, setError] = useState(null);
 
@@ -35,15 +35,17 @@ export default function App() {
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise((_, reject) =>
           setTimeout(
-            () => reject(new Error("Auth check timeout - Supabase may be unreachable")),
-            8000
-          )
+            () =>
+              reject(
+                new Error("Auth check timeout - Supabase may be unreachable"),
+              ),
+            8000,
+          ),
         );
 
-        const { data: { session } } = await Promise.race([
-          sessionPromise,
-          timeoutPromise,
-        ]);
+        const {
+          data: { session },
+        } = await Promise.race([sessionPromise, timeoutPromise]);
 
         if (isMounted) {
           setUser(session?.user ?? null);
@@ -93,7 +95,9 @@ export default function App() {
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="text-slate-600">Initializing...</p>
-          <p className="text-xs text-slate-500">If this takes longer than 10 seconds, check your connection</p>
+          <p className="text-xs text-slate-500">
+            If this takes longer than 10 seconds, check your connection
+          </p>
         </div>
       </div>
     );
