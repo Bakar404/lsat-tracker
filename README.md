@@ -1,29 +1,107 @@
 # LSAT Tracker
 
-Dashboard website to upload LSAT exam PDFs, transform them into CSVs, and visualize strengths/weaknesses by section and subtype.
+A modern, responsive dashboard for LSAT exam analysis. Upload PDF exam papers, automatically extract question data, and visualize your performance across sections and question types.
 
-## Live URL
-- GitHub Pages: https://Bakar404.github.io/lsat-tracker/
+## 🚀 Live Application
 
-## Frontend (Vite + React)
+**[Open LSAT Tracker →](https://Bakar404.github.io/lsat-tracker/)**
+
+Hosted on GitHub Pages. Sign in to access your dashboard and track progress over time.
+
+---
+
+## ⚙️ Development Setup
+
+### Frontend
+```bash
 cd frontend
-npm ci
+npm install
 npm run dev
-- Set Transformer URL in the app to your backend endpoint (see below).
-- Sign in (demo auth), click **Transform & Upload Test**, pick a PDF.
+```
+Runs on `http://localhost:5173`
 
-## Backend (FastAPI)
+### Backend
+```bash
 cd backend
 pip install -r requirements.txt
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-- Health: http://127.0.0.1:8000/healthz
-- Transform: POST `/transform` with form field `file` (PDF).
+```
+Runs on `http://127.0.0.1:8000`
 
-### Free public URL via Cloudflare Tunnel (no recurring cost)
-- Install `cloudflared`, run `cloudflared tunnel --url http://localhost:8000`
-- Copy the provided https URL into the app’s Transformer URL box.
+### Expose Backend Publicly (Development)
+Use Cloudflare Tunnel for local testing:
+```bash
+brew install cloudflare/cloudflare/cloudflared
+cloudflared tunnel --url http://localhost:8000
+```
+Copy the generated URL into the app's Transformer URL setting.
 
-## Notes
-- Frontend builds for GitHub Pages (base: `/lsat-tracker/`).
-- De-dup logic prevents duplicate question rows on re-upload (key: exam|section|question).
-- LR and RC subtype lists are built-in, so missing categories still show (as zero) in visuals.
+---
+
+## ✨ Features
+
+- **PDF Upload**: Upload LSAT practice test PDFs
+- **Auto-parsing**: Extract questions, answers, accuracy, and timing
+- **Performance Dashboard**: Analyze accuracy by section and subtype
+- **Trend Analysis**: Track improvement across tests
+- **Test Management**: Organize and delete test records
+- **Admin Panel**: Approve new users and manage access
+- **Authentication**: Secure Supabase auth with email confirmation
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React 18 + Vite + Tailwind CSS + Recharts
+- **Backend**: FastAPI + Python
+- **Database**: Supabase (PostgreSQL)
+- **Hosting**: GitHub Pages + Supabase
+- **Authentication**: Supabase Auth
+
+---
+
+## 📚 Project Structure
+
+```
+lsat-tracker/
+├── frontend/          React + Vite app
+│   └── src/
+│       ├── components/    UI components
+│       ├── charts/        Chart visualizations
+│       ├── hooks/         Data management (useData)
+│       └── lib/           Supabase client
+├── backend/           FastAPI image/PDF transformer
+├── supabase/          Edge Functions
+└── docs/              GitHub Pages build output
+```
+
+---
+
+## 🔐 First-Time Setup
+
+1. **Database**: Run in [Supabase SQL Editor](https://supabase.com/dashboard):
+```sql
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
+UPDATE profiles SET is_admin = TRUE WHERE id = 'YOUR_USER_ID';
+```
+
+2. **(Optional) Email Notifications**: Get a Resend API key and run:
+```bash
+supabase secrets set RESEND_API_KEY="your_key_here"
+```
+
+---
+
+## 💡 Key Implementation Details
+
+- **Build**: Frontend builds to `/docs` for GitHub Pages
+- **Routing**: Client-side hash router for GitHub Pages compatibility
+- **Deployment**: Automatic GitHub Actions on push to `main`
+- **De-duplication**: Prevents duplicate questions (key: `exam|section|question`)
+- **Subtypes**: Logical Reasoning and Reading Comprehension pre-configured
+
+---
+
+## 📄 License
+
+MIT License

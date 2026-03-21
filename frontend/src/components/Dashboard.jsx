@@ -236,7 +236,7 @@ export default function Dashboard({ user, onSignOut }) {
           </div>
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all"
+            className="flex items-center gap-2 px-4 py-2 text-slate-700 hover:bg-red-50 hover:text-red-700 rounded-xl transition-all font-medium"
           >
             <LogOut className="w-4 h-4" />
             Sign Out
