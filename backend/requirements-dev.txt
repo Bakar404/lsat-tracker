@@ -1,0 +1,5 @@
+# Test and lint tools.
+-r requirements.txt
+pytest==9.1.1
+httpx2==2.14.0
+ruff==0.17.1
