@@ -1,0 +1,17 @@
+# Tool configuration. Dependencies are pinned in requirements.txt and requirements-dev.txt.
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra"
+filterwarnings = [
+    # Emitted by PyMuPDF's SWIG bindings on Python 3.14; harmless.
+    "ignore:builtin type (SwigPyPacked|SwigPyObject|swigvarlink) has no __module__ attribute:DeprecationWarning",
+]
