@@ -1,7 +1,6 @@
-fastapi>=0.111
-uvicorn[standard]>=0.30
-python-multipart>=0.0.9
-pydantic>=2.7
-pymupdf>=1.24.0
-numpy>=1.24.0
-pandas>=2.2.2
+# Runtime dependencies (Python 3.11+). Versions are pinned for reproducible installs.
+fastapi==0.146.0
+uvicorn==0.54.0
+python-multipart==0.0.32
+pymupdf==1.28.2
+numpy==2.4.6
