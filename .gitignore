@@ -18,9 +18,6 @@ htmlcov/
 # Test output
 coverage/
 
-# Makefile stamps
-.make/
-
 # Environment files: local configuration and secrets
 .env
 .env.*
