@@ -67,7 +67,7 @@ run: $(PY_STAMP) build ## Install what is missing, build the web app and start t
 
 dev: $(PY_STAMP) $(NODE_STAMP) ## Run the API and the Vite dev server with hot reload
 	@echo "Web app with hot reload: http://localhost:$(WEB_PORT)  (API on http://$(HOST):$(PORT)/api)"
-	@(cd $(BACKEND) && exec .venv/bin/python -m lsat_tracker serve --host $(HOST) --port $(PORT) --reload) & \
+	@(cd $(BACKEND) && exec .venv/bin/python -m lsat_tracker serve --host $(HOST) --port $(PORT) --reload --api-only) & \
 	api=$$!; \
 	trap 'kill $$api 2>/dev/null' EXIT INT TERM; \
 	cd $(FRONTEND) && API_PORT=$(PORT) npm run dev -- --port $(WEB_PORT)

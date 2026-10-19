@@ -6,6 +6,8 @@ One process serves everything:
 * ``POST /api/transform``  parse an uploaded score report PDF
 * ``GET  /``               the React app from ``frontend/dist`` (if built)
 
+In API-only mode (``make dev``), ``/`` points to the Vite dev server instead.
+
 Uploads are read into memory, parsed and discarded. Nothing is stored on the
 server; the browser keeps the parsed results.
 """
@@ -36,6 +38,7 @@ MAX_PAGES = 100
 MAX_EXAM_NUMBER_LENGTH = 40
 PDF_CONTENT_TYPES = frozenset({"application/pdf", "application/x-pdf", "application/octet-stream"})
 STATIC_DIR_ENV = "LSAT_TRACKER_STATIC_DIR"
+API_ONLY_ENV = "LSAT_TRACKER_API_ONLY"
 DEFAULT_STATIC_DIR = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
 NO_QUESTIONS_MESSAGE = (
@@ -161,27 +164,46 @@ class _WebApp(StaticFiles):
         return response
 
 
-_FRONTEND_MISSING_HTML = """<!doctype html>
+def _notice_page(body: str) -> str:
+    return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>LSAT Tracker</title>
 <style>
-body{font-family:system-ui,sans-serif;max-width:40rem;margin:4rem auto;padding:0 1rem;
-color:#0f172a;line-height:1.5}
-code{background:#f1f5f9;padding:.1rem .3rem;border-radius:.25rem}
+body{{font-family:system-ui,sans-serif;max-width:40rem;margin:4rem auto;padding:0 1rem;
+color:#0f172a;line-height:1.5}}
+code{{background:#f1f5f9;padding:.1rem .3rem;border-radius:.25rem}}
 </style>
 </head><body><h1>LSAT Tracker</h1>
-<p>The API is running, but the web app has not been built yet.</p>
+{body}
+</body></html>"""
+
+
+_FRONTEND_MISSING_HTML = _notice_page(
+    """<p>The API is running, but the web app has not been built yet.</p>
 <p>Run <code>make run</code> from the repository root, or build it manually with
 <code>npm --prefix frontend ci &amp;&amp; npm --prefix frontend run build</code>, then reload.</p>
-<p>During development, use <code>make dev</code> and open the Vite dev server instead.</p>
-</body></html>"""
+<p>During development, use <code>make dev</code> and open the Vite dev server instead.</p>"""
+)
+
+_API_ONLY_HTML = _notice_page(
+    """<p>This process serves only the API, for development with <code>make dev</code>.</p>
+<p>Open the web app from the Vite dev server, <code>http://localhost:5183</code> by default.
+The API reference is at <a href="/api/docs"><code>/api/docs</code></a>.</p>"""
+)
 
 
 def create_app(
     *,
     static_dir: str | os.PathLike[str] | None = None,
     max_upload_bytes: int = DEFAULT_MAX_UPLOAD_BYTES,
+    api_only: bool | None = None,
 ) -> FastAPI:
-    """Build the application. ``static_dir`` defaults to ``frontend/dist``."""
+    """Build the application.
+
+    ``static_dir`` defaults to ``frontend/dist``. With ``api_only`` (default: the
+    ``LSAT_TRACKER_API_ONLY=1`` environment variable) the web app is not served.
+    """
+    if api_only is None:
+        api_only = os.environ.get(API_ONLY_ENV) == "1"
     app = FastAPI(
         title="LSAT Tracker",
         version=__version__,
@@ -259,7 +281,13 @@ def create_app(
         return JSONResponse({"detail": f"Unknown API endpoint: /api/{path}"}, status_code=404)
 
     web_root = resolve_static_dir(static_dir)
-    if (web_root / "index.html").is_file():
+    if api_only:
+
+        @app.get("/", include_in_schema=False)
+        async def api_only_notice() -> HTMLResponse:
+            return HTMLResponse(_API_ONLY_HTML)
+
+    elif (web_root / "index.html").is_file():
         app.mount("/", _WebApp(directory=web_root, html=True), name="web")
     else:
 
