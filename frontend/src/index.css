@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+@layer base {
+  /* Keep the page behind an open modal dialog from scrolling. */
+  html:has(dialog[open]:modal) {
+    overflow: hidden;
+  }
+
+  /* Charts are focusable for keyboard users; hide the focus ring after a mouse click. */
+  .recharts-surface:focus:not(:focus-visible),
+  .recharts-wrapper:focus:not(:focus-visible) {
+    outline: none;
+  }
+}
