@@ -2,7 +2,7 @@
 
 Usage::
 
-    python -m lsat_tracker serve [--host HOST] [--port PORT] [--reload]
+    python -m lsat_tracker serve [--host HOST] [--port PORT] [--reload] [--api-only]
     python -m lsat_tracker parse REPORT.pdf [--json] [--out DIR]
 """
 
@@ -36,10 +36,12 @@ def _port_is_free(host: str, port: int) -> bool:
 def _serve(args: argparse.Namespace) -> int:
     import uvicorn
 
-    from .api import STATIC_DIR_ENV, resolve_static_dir
+    from .api import API_ONLY_ENV, STATIC_DIR_ENV, resolve_static_dir
 
     if args.static_dir:
         os.environ[STATIC_DIR_ENV] = str(Path(args.static_dir).resolve())
+    if args.api_only:
+        os.environ[API_ONLY_ENV] = "1"
     if not _port_is_free(args.host, args.port):
         print(
             f"error: port {args.port} is already in use. Stop the other process or choose "
@@ -52,7 +54,9 @@ def _serve(args: argparse.Namespace) -> int:
     url = f"http://{shown_host}:{args.port}"
     static_dir = resolve_static_dir()
     print(f"\n  LSAT Tracker {__version__}")
-    if (static_dir / "index.html").is_file():
+    if args.api_only:
+        print(f"  API listening on {url}/api (reference at {url}/api/docs)\n", flush=True)
+    elif (static_dir / "index.html").is_file():
         print(f"  Open {url} in your browser. Press Ctrl+C to stop.\n", flush=True)
     else:
         print(f"  API listening on {url}/api (web app not built in {static_dir})\n", flush=True)
@@ -126,6 +130,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     serve.add_argument("--reload", action="store_true", help="restart on code changes")
     serve.add_argument("--static-dir", help="built frontend to serve (default: frontend/dist)")
+    serve.add_argument(
+        "--api-only",
+        action="store_true",
+        help="serve only the API, for use with the Vite dev server",
+    )
     serve.set_defaults(handler=_serve)
 
     parse = commands.add_parser("parse", help="parse a score report into CSV or JSON")

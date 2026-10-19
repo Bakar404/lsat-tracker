@@ -121,3 +121,15 @@ def test_explains_how_to_build_a_missing_frontend():
 
     assert response.status_code == 503
     assert "make run" in response.text
+
+
+def test_api_only_mode_points_to_the_dev_server(monkeypatch):
+    monkeypatch.setenv("LSAT_TRACKER_API_ONLY", "1")
+    with TestClient(create_app(static_dir=STATIC_FIXTURE)) as client:
+        home = client.get("/")
+        health = client.get("/api/health")
+
+    assert home.status_code == 200
+    assert "Vite dev server" in home.text
+    assert "static test build" not in home.text
+    assert health.json()["status"] == "ok"
