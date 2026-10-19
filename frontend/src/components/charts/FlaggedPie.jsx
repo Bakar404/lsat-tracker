@@ -1,4 +1,5 @@
 import { Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { usePrefersReducedMotion } from "../../hooks/useMediaQuery.js";
 import { fmtPercent, plural } from "../../lib/format.js";
 import ChartCard, { LegendDots } from "./ChartCard.jsx";
 import StatTooltip from "./StatTooltip.jsx";
@@ -9,6 +10,7 @@ const UNFLAGGED_COLOR = "#14b8a6";
 
 export default function FlaggedPie({ summary }) {
   const { flagged, unflagged } = summary;
+  const animate = !usePrefersReducedMotion();
   const total = flagged.attempted + unflagged.attempted;
   const share = (count) => (total ? Math.round((100 * count) / total) : 0);
   const data = [
@@ -40,6 +42,7 @@ export default function FlaggedPie({ summary }) {
               outerRadius="92%"
               paddingAngle={flagged.attempted && unflagged.attempted ? 2 : 0}
               stroke="none"
+              isAnimationActive={animate}
             />
             <Tooltip
               content={(props) => (

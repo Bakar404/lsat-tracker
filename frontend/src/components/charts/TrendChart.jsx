@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { usePrefersReducedMotion } from "../../hooks/useMediaQuery.js";
 import { fmtDate } from "../../lib/format.js";
 import ChartCard from "./ChartCard.jsx";
 import StatTooltip from "./StatTooltip.jsx";
@@ -21,6 +22,7 @@ const SCALED_DOMAIN = [
 
 export default function TrendChart({ data }) {
   const hasScaled = data.some((d) => d.scaled_score != null);
+  const animate = !usePrefersReducedMotion();
   return (
     <ChartCard
       title="Progress by exam"
@@ -69,6 +71,7 @@ export default function TrendChart({ data }) {
             stroke="#10b981"
             strokeWidth={2.5}
             dot={{ r: 3 }}
+            isAnimationActive={animate}
           />
           {hasScaled && (
             <Line
@@ -80,6 +83,7 @@ export default function TrendChart({ data }) {
               strokeWidth={2.5}
               dot={{ r: 3 }}
               connectNulls
+              isAnimationActive={animate}
             />
           )}
         </LineChart>
