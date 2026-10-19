@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useMediaQuery } from "../../hooks/useMediaQuery.js";
+import { useMediaQuery, usePrefersReducedMotion } from "../../hooks/useMediaQuery.js";
 import { SECTION_TYPE_COLORS } from "../ui/styles.js";
 import CategoryTick from "./CategoryTick.jsx";
 import ChartCard, { LegendDots } from "./ChartCard.jsx";
@@ -23,6 +23,7 @@ const MAX_BARS = 15;
  */
 export function QuestionTypeBars({ rows, value, axis }) {
   const wide = useMediaQuery("(min-width: 640px)");
+  const animate = !usePrefersReducedMotion();
   return (
     <ResponsiveContainer width="100%" height={barListHeight(rows.length)}>
       <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 12, bottom: 0, left: 0 }}>
@@ -50,6 +51,7 @@ export function QuestionTypeBars({ rows, value, axis }) {
           dataKey={value}
           maxBarSize={20}
           radius={[0, 6, 6, 0]}
+          isAnimationActive={animate}
           shape={(props) => (
             <Rectangle {...props} fill={SECTION_TYPE_COLORS[props.payload.section_type]} />
           )}

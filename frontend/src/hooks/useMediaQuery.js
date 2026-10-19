@@ -11,3 +11,7 @@ export function useMediaQuery(query) {
   );
   return useSyncExternalStore(subscribe, () => window.matchMedia(query).matches);
 }
+
+export function usePrefersReducedMotion() {
+  return useMediaQuery("(prefers-reduced-motion: reduce)");
+}

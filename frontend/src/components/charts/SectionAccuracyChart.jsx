@@ -8,12 +8,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { usePrefersReducedMotion } from "../../hooks/useMediaQuery.js";
 import { SECTION_TYPE_COLORS } from "../ui/styles.js";
 import ChartCard from "./ChartCard.jsx";
 import StatTooltip from "./StatTooltip.jsx";
 import { AXIS_LINE, AXIS_TICK, CURSOR, GRID, accuracyLine, timeLine } from "./theme.js";
 
 export default function SectionAccuracyChart({ data }) {
+  const animate = !usePrefersReducedMotion();
   return (
     <ChartCard title="Accuracy by section type" subtitle="Share of questions answered correctly">
       <ResponsiveContainer width="100%" height={280}>
@@ -36,6 +38,7 @@ export default function SectionAccuracyChart({ data }) {
             name="Accuracy"
             maxBarSize={88}
             radius={[8, 8, 0, 0]}
+            isAnimationActive={animate}
             shape={(props) => (
               <Rectangle {...props} fill={SECTION_TYPE_COLORS[props.payload.section_type]} />
             )}

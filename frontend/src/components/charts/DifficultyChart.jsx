@@ -8,12 +8,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { usePrefersReducedMotion } from "../../hooks/useMediaQuery.js";
 import { DIFFICULTY_COLORS } from "../ui/styles.js";
 import ChartCard from "./ChartCard.jsx";
 import StatTooltip from "./StatTooltip.jsx";
 import { AXIS_LINE, AXIS_TICK, CURSOR, GRID, accuracyLine, timeLine } from "./theme.js";
 
 export default function DifficultyChart({ data }) {
+  const animate = !usePrefersReducedMotion();
   return (
     <ChartCard title="Accuracy by difficulty" subtitle="LawHub difficulty, from Level 1 (easiest) to Level 5">
       <ResponsiveContainer width="100%" height={300}>
@@ -36,6 +38,7 @@ export default function DifficultyChart({ data }) {
             name="Accuracy"
             maxBarSize={64}
             radius={[8, 8, 0, 0]}
+            isAnimationActive={animate}
             shape={(props) => (
               <Rectangle {...props} fill={DIFFICULTY_COLORS[props.payload.difficulty - 1] ?? "#64748b"} />
             )}
