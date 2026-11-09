@@ -1,12 +1,22 @@
 # LSAT Tracker
 
 [![CI](https://github.com/Bakar404/lsat-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/Bakar404/lsat-tracker/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+![Languages: Python and JavaScript](https://img.shields.io/badge/languages-Python%20%7C%20JavaScript-blue)
 
 LSAT Tracker turns LawHub score reports into a private analytics dashboard. Upload the PDF score report of each LSAT practice test to see which question types, difficulty levels and sections cost you points, how long each kind of question takes you, and how your accuracy and scaled score change from test to test.
 
 Everything runs on your computer. One command starts a local server, reports are parsed in memory, and the results are stored in your browser. There is no account, no cloud service and no tracking.
 
 ![LSAT Tracker dashboard with sample data, showing summary cards, accuracy by section type and progress by exam](screenshots/dashboard.png)
+
+## Quick start at a glance
+
+Requires Python 3.11+, Node.js 22.13+ with npm, and make; see [Quick start](#quick-start) for setup details and alternatives.
+
+1. Clone the repository: `git clone https://github.com/Bakar404/lsat-tracker.git`.
+2. Run `cd lsat-tracker && make run`.
+3. Open <http://127.0.0.1:8613> and upload a report or choose **Explore with sample data**.
 
 ## Features
 
